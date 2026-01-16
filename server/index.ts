@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { setupAuth } from './auth';
-import { pool } from './db';
+import { retryConnection, isDatabaseConnected, pool } from './db';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,10 +21,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 async function initDatabase() {
   try {
-    console.log('Initializing database...');
-    console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
-
-    await pool.query(`
+    const dbPool = pool();
+    
+    await dbPool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
@@ -34,20 +33,19 @@ async function initDatabase() {
       )
     `);
 
-    console.log('Database initialized successfully');
+    console.log('Database tables initialized');
   } catch (err: any) {
     console.error('Database initialization error:', err.message);
-    if (isProd) {
-      console.error('Production database connection failed. Check DATABASE_URL configuration.');
-    }
     throw err;
   }
 }
 
-setupAuth(app);
-
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', database: !!process.env.DATABASE_URL });
+  res.json({ 
+    status: 'ok', 
+    database: isDatabaseConnected(),
+    environment: isProd ? 'production' : 'development'
+  });
 });
 
 if (isProd) {
@@ -64,15 +62,26 @@ if (isProd) {
 }
 
 async function startServer() {
-  try {
+  console.log(`Starting server in ${isProd ? 'production' : 'development'} mode...`);
+  console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+  
+  const dbConnected = await retryConnection(5, 3000);
+  
+  if (!dbConnected) {
+    console.error('Failed to connect to database after retries');
+    if (isProd) {
+      console.error('Production requires database. Check DATABASE_URL configuration.');
+      process.exit(1);
+    }
+  } else {
     await initDatabase();
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server running on port ${PORT} (${isProd ? 'production' : 'development'})`);
-    });
-  } catch (err) {
-    console.error('Failed to start server:', err);
-    process.exit(1);
+    setupAuth(app);
   }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Database connected: ${isDatabaseConnected()}`);
+  });
 }
 
 startServer();
