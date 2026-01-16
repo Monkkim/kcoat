@@ -18,14 +18,6 @@ Preferred communication style: Simple, everyday language.
 - **Styling:** Tailwind CSS via CDN, custom CSS variables for brand colors
 - **Icons:** Lucide React icon library
 - **State Management:** React useState hooks (no external state library)
-- **Authentication:** AuthContext for user state, AuthPage for login/register/reset UI
-
-### Backend Architecture
-- **Server:** Express.js on port 3001
-- **Authentication:** Passport.js with Local Strategy
-- **Session:** express-session with PostgreSQL session store (connect-pg-simple)
-- **Database:** PostgreSQL with Drizzle ORM
-- **Password Security:** scrypt hashing with random salt
 
 ### Application Flow
 The app follows a 4-step wizard pattern:
@@ -48,7 +40,7 @@ The app follows a 4-step wizard pattern:
 ## External Dependencies
 
 ### Third-Party Services
-- **n8n Webhook:** External automation platform endpoint at `https://primary-production-c55d.up.railway.app/webhook/send-email` for AI content generation
+- **n8n Webhook:** External automation platform endpoint at `https://primary-production-c55d.up.railway.app/webhook-test/send-email` for AI content generation
 - **Gemini API:** API key configured via environment variable `GEMINI_API_KEY` (optional, used for AI features)
 
 ### NPM Packages
@@ -56,10 +48,6 @@ The app follows a 4-step wizard pattern:
 - `lucide-react` - Icon library
 - `vite` with `@vitejs/plugin-react` - Build tooling
 - `typescript` - Type safety
-- `express` / `express-session` - Backend server and sessions
-- `passport` / `passport-local` - Authentication
-- `drizzle-orm` / `pg` - Database ORM and PostgreSQL driver
-- `connect-pg-simple` - PostgreSQL session store
 
 ### Browser APIs
 - **Clipboard API:** ClipboardItem for rich HTML copy functionality
