@@ -100,7 +100,7 @@ export function setupAuth(app: Express) {
     try {
       const result = insertUserSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ error: result.error.errors[0]?.message || '입력값이 올바르지 않습니다' });
+        return res.status(400).json({ error: result.error.issues[0]?.message || '입력값이 올바르지 않습니다' });
       }
 
       const [existingUser] = await getUserByEmail(result.data.email);
@@ -134,7 +134,7 @@ export function setupAuth(app: Express) {
   app.post('/api/login', (req, res, next) => {
     const result = loginSchema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ error: result.error.errors[0]?.message || '입력값이 올바르지 않습니다' });
+      return res.status(400).json({ error: result.error.issues[0]?.message || '입력값이 올바르지 않습니다' });
     }
 
     passport.authenticate('local', (err: any, user: SelectUser | false, info: { message: string }) => {
@@ -182,7 +182,7 @@ export function setupAuth(app: Express) {
     try {
       const result = forgotPasswordSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ error: result.error.errors[0]?.message || '올바른 이메일을 입력해주세요' });
+        return res.status(400).json({ error: result.error.issues[0]?.message || '올바른 이메일을 입력해주세요' });
       }
 
       const [user] = await getUserByEmail(result.data.email);
@@ -226,7 +226,7 @@ export function setupAuth(app: Express) {
     try {
       const result = resetPasswordSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ error: result.error.errors[0]?.message || '입력값이 올바르지 않습니다' });
+        return res.status(400).json({ error: result.error.issues[0]?.message || '입력값이 올바르지 않습니다' });
       }
 
       const [user] = await db.select().from(users)
