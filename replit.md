@@ -12,12 +12,29 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
+### Backend Architecture
+- **Framework:** Express.js with TypeScript
+- **Database:** PostgreSQL with Drizzle ORM
+- **Authentication:** Passport.js with LocalStrategy
+- **Session Storage:** connect-pg-simple (PostgreSQL-based sessions)
+- **Password Hashing:** bcryptjs
+- **Development Port:** 3001 (proxied through Vite)
+- **Production Port:** 5000
+
 ### Frontend Architecture
 - **Framework:** React 19 with TypeScript
 - **Build Tool:** Vite 6 for fast development and bundling
 - **Styling:** Tailwind CSS via CDN, custom CSS variables for brand colors
 - **Icons:** Lucide React icon library
 - **State Management:** React useState hooks (no external state library)
+- **Rich Text Editor:** contentEditable-based with image resize handles
+
+### Authentication System
+- **Login:** Email/password authentication
+- **Registration:** Name, email, password with validation
+- **Password Reset:** Email-based token system (nodemailer integration ready)
+- **Session Management:** Secure cookies with PostgreSQL session store
+- **Required Secret:** SESSION_SECRET environment variable
 
 ### Application Flow
 The app follows a 4-step wizard pattern:
@@ -40,7 +57,7 @@ The app follows a 4-step wizard pattern:
 ## External Dependencies
 
 ### Third-Party Services
-- **n8n Webhook:** External automation platform endpoint at `https://primary-production-c55d.up.railway.app/webhook-test/send-email` for AI content generation
+- **n8n Webhook:** External automation platform endpoint at `https://primary-production-c55d.up.railway.app/webhook/send-email` for AI content generation
 - **Gemini API:** API key configured via environment variable `GEMINI_API_KEY` (optional, used for AI features)
 
 ### NPM Packages
