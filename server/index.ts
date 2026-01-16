@@ -3,9 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { setupAuth } from './auth';
-import { db, pool } from './db';
-import { users } from './schema';
-import { sql } from 'drizzle-orm';
+import { pool } from './db';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,9 +21,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 async function initDatabase() {
   try {
-    console.log('📦 데이터베이스 초기화 시작...');
+    console.log('Initializing database...');
+    console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
 
-    // users 테이블 생성
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -36,26 +34,20 @@ async function initDatabase() {
       )
     `);
 
-    console.log('✅ 데이터베이스 초기화 완료');
-
-    // 테이블 확인
-    const result = await pool.query(`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-    `);
-    console.log('📊 현재 테이블:', result.rows.map(r => r.table_name).join(', '));
-
-  } catch (err) {
-    console.error('❌ 데이터베이스 초기화 실패:', err);
-    throw err; // 에러를 던져서 서버 시작 중단
+    console.log('Database initialized successfully');
+  } catch (err: any) {
+    console.error('Database initialization error:', err.message);
+    if (isProd) {
+      console.error('Production database connection failed. Check DATABASE_URL configuration.');
+    }
+    throw err;
   }
 }
 
 setupAuth(app);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', database: !!process.env.DATABASE_URL });
 });
 
 if (isProd) {
@@ -71,8 +63,16 @@ if (isProd) {
   });
 }
 
-initDatabase().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT} (${isProd ? 'production' : 'development'})`);
-  });
-});
+async function startServer() {
+  try {
+    await initDatabase();
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT} (${isProd ? 'production' : 'development'})`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+startServer();

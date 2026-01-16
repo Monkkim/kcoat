@@ -2,25 +2,28 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
-// 환경변수 체크
+const isProd = process.env.NODE_ENV === 'production';
+
 if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL 환경변수가 설정되지 않았습니다!');
-  console.error('Replit Secrets에서 DATABASE_URL을 설정해주세요.');
-  process.exit(1);
+  console.error('DATABASE_URL environment variable is not set!');
+  if (isProd) {
+    console.error('Production database not configured. Please ensure the database is properly set up in Replit.');
+  }
 }
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: isProd ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
 });
 
-// 연결 테스트
 pool.on('error', (err) => {
-  console.error('PostgreSQL pool error:', err);
+  console.error('PostgreSQL pool error:', err.message);
 });
 
 pool.on('connect', () => {
-  console.log('✅ PostgreSQL 연결 성공');
+  console.log('PostgreSQL connected successfully');
 });
 
 export const db = drizzle(pool, { schema });
