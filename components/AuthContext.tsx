@@ -68,26 +68,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ username, email, password }),
     });
 
-    const text = await res.text();
-    
     if (!res.ok) {
-      let errorMessage = '회원가입에 실패했습니다.';
-      try {
-        const error = JSON.parse(text);
-        errorMessage = error.message || errorMessage;
-      } catch {
-        console.error('Register error response:', text);
-      }
-      throw new Error(errorMessage);
+      const error = await res.json();
+      throw new Error(error.message || '회원가입에 실패했습니다.');
     }
 
-    try {
-      const userData = JSON.parse(text);
-      setUser(userData);
-    } catch {
-      console.error('Register parse error:', text);
-      throw new Error('응답 처리 중 오류가 발생했습니다.');
-    }
+    const userData = await res.json();
+    setUser(userData);
   };
 
   const logout = async () => {

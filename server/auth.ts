@@ -33,7 +33,7 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 
 export function setupAuth(app: Express) {
   const sessionStore = new PostgresSessionStore({ 
-    pool: pool(), 
+    pool, 
     createTableIfMissing: true 
   });
 
@@ -45,8 +45,6 @@ export function setupAuth(app: Express) {
     store: sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   }));
@@ -56,7 +54,7 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const [user] = await db().select().from(users).where(eq(users.username, username));
+        const [user] = await db.select().from(users).where(eq(users.username, username));
         if (!user) {
           return done(null, false, { message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         }
@@ -75,7 +73,7 @@ export function setupAuth(app: Express) {
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     try {
-      const [user] = await db().select().from(users).where(eq(users.id, id));
+      const [user] = await db.select().from(users).where(eq(users.id, id));
       if (user) {
         const { password: _, ...userWithoutPassword } = user;
         done(null, userWithoutPassword);
@@ -95,19 +93,18 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
       }
 
-      const [existingUser] = await db().select().from(users).where(eq(users.username, username));
+      const [existingUser] = await db.select().from(users).where(eq(users.username, username));
       if (existingUser) {
         return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
       }
 
-      const [existingEmail] = await db().select().from(users).where(eq(users.email, email));
+      const [existingEmail] = await db.select().from(users).where(eq(users.email, email));
       if (existingEmail) {
         return res.status(400).json({ message: '이미 등록된 이메일입니다.' });
       }
 
       const hashedPassword = await hashPassword(password);
-
-      const [newUser] = await db().insert(users).values({
+      const [newUser] = await db.insert(users).values({
         username,
         email,
         password: hashedPassword,
@@ -122,7 +119,7 @@ export function setupAuth(app: Express) {
         res.status(201).json(userWithoutPassword);
       });
     } catch (err) {
-      console.error('Register error:', err);
+      console.error('Registration error:', err);
       res.status(500).json({ message: '회원가입 처리 중 오류가 발생했습니다.' });
     }
   });
@@ -163,7 +160,7 @@ export function setupAuth(app: Express) {
   app.post('/api/reset-password-request', async (req, res) => {
     try {
       const { email } = req.body;
-      const [user] = await db().select().from(users).where(eq(users.email, email));
+      const [user] = await db.select().from(users).where(eq(users.email, email));
       
       res.json({ message: '비밀번호 재설정 안내가 이메일로 전송되었습니다.' });
     } catch (err) {
