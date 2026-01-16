@@ -6,8 +6,8 @@ import connectPg from 'connect-pg-simple';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import { users, insertUserSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, type SelectUser } from './db/schema';
-import { db, pool } from './db';
+import { users, insertUserSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, type SelectUser } from './db/schema.js';
+import { db, pool } from './db/index.js';
 import { eq } from 'drizzle-orm';
 
 declare global {
