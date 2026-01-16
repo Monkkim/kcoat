@@ -1,0 +1,101 @@
+cause: Error: getaddrinfo EAI_AGAIN helium
+2026-01-16 18:23:30.21
+50461776
+User
+}
+2026-01-16 18:23:30.21
+50461776
+User
+query: 'select "id", "name", "email", "password", "reset_token", "reset_token_expiry", "created_at" from "users" where "users"."email" = $1 limit $2',
+2026-01-16 18:23:30.21
+50461776
+User
+at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+2026-01-16 18:23:30.21
+50461776
+User
+at async file:///home/runner/workspace/node_modules/drizzle-orm/node-postgres/session.js:117:22
+2026-01-16 18:23:30.21
+50461776
+User
+}
+2026-01-16 18:23:30.21
+50461776
+User
+at async file:///home/runner/workspace/dist-server/auth.js:84:36 {
+2026-01-16 18:23:30.21
+50461776
+User
+params: snu08041@naver.com,1
+2026-01-16 18:23:30.21
+50461776
+User
+at async NodePgPreparedQuery.queryWithCache (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/session.js:39:16)
+2026-01-16 18:23:30.21
+50461776
+User
+at NodePgPreparedQuery.queryWithCache (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/session.js:41:15)
+2026-01-16 18:23:30.21
+50461776
+User
+hostname: 'helium'
+2026-01-16 18:23:30.21
+50461776
+User
+syscall: 'getaddrinfo',
+2026-01-16 18:23:30.21
+50461776
+User
+code: 'EAI_AGAIN',
+2026-01-16 18:23:30.21
+50461776
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-01-16 18:23:30.21
+50461776
+User
+at async file:///home/runner/workspace/dist-server/auth.js:84:36 {
+2026-01-16 18:23:30.21
+50461776
+User
+at async file:///home/runner/workspace/node_modules/drizzle-orm/node-postgres/session.js:117:22
+2026-01-16 18:23:30.21
+50461776
+User
+at async file:///home/runner/workspace/node_modules/drizzle-orm/node-postgres/session.js:124:18
+2026-01-16 18:23:30.21
+50461776
+User
+errno: -3001,
+2026-01-16 18:23:30.21
+50461776
+User
+Register error: DrizzleQueryError: Failed query: select "id", "name", "email", "password", "reset_token", "reset_token_expiry", "created_at" from "users" where "users"."email" = $1 limit $2
+2026-01-16 18:23:30.21
+50461776
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-01-16 18:23:30.21
+50461776
+User
+params: [ 'snu08041@naver.com', 1 ],
+2026-01-16 18:23:36.10
+50461776
+User
+at async file:///home/runner/workspace/dist-server/auth.js:84:36 {
+2026-01-16 18:23:36.10
+50461776
+User
+params: snu08041@naver.com,1
+2026-01-16 18:23:36.10
+50461776
+User
+errno: -3001,
+2026-01-16 18:23:36.10
+50461776
+User
+query: 'select "id", "name", "email", "password", "reset_token", "reset_token_expiry", "created_at" from "users" where "users"."email" = $1 limit $2',
+2026-01-16 18:23:36.10
+50461776
+User
+at async file:///home/runner/workspace/node_modules/drizzle-orm/node-postgres/session.js:117:22
