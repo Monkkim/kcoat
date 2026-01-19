@@ -176,8 +176,53 @@ export const Library: React.FC = () => {
               </div>
             </div>
             <div className="flex-1 p-6 overflow-y-auto">
+              <style>{`
+                .library-content {
+                  color: #000000 !important;
+                  font-size: 16px;
+                  line-height: 1.8;
+                }
+                .library-content * {
+                  color: #000000 !important;
+                }
+                .library-content img {
+                  max-width: 400px !important;
+                  width: auto !important;
+                  height: auto !important;
+                  max-height: 300px !important;
+                  object-fit: contain;
+                  display: block;
+                  margin: 16px auto;
+                  border-radius: 8px;
+                  border: 1px solid #e5e7eb;
+                }
+                .library-content h1 {
+                  font-size: 24px !important;
+                  font-weight: 800 !important;
+                  margin-bottom: 16px !important;
+                  color: #000000 !important;
+                }
+                .library-content h2 {
+                  font-size: 20px !important;
+                  font-weight: 700 !important;
+                  margin-top: 24px !important;
+                  margin-bottom: 12px !important;
+                  color: #000000 !important;
+                }
+                .library-content p, .library-content div {
+                  margin-bottom: 12px;
+                  white-space: pre-wrap;
+                  color: #000000 !important;
+                }
+                .library-content .block {
+                  margin-bottom: 20px;
+                  padding: 16px;
+                  background: #f9fafb;
+                  border-radius: 12px;
+                }
+              `}</style>
               <div
-                className="prose max-w-none"
+                className="library-content"
                 dangerouslySetInnerHTML={{ __html: selectedPost.content }}
               />
             </div>
