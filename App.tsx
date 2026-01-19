@@ -180,7 +180,7 @@ const App: React.FC = () => {
 
       const responseData = Array.isArray(data) ? data[0] : data;
 
-      let finalTitle = responseData.title || `(${formData.buildingName}) 탄성코트 시공 후기`;
+      let finalTitle = responseData.title || `(${formData.detailedLocation}) 탄성코트 시공`;
       let finalSections: { type: string; content: string }[] = [];
       let finalImages: string[] = [];
       let finalHashtags = "#탄성코트 #KCOAT #베란다칠 #결로방지";
