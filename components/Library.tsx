@@ -180,7 +180,7 @@ export const Library: React.FC = () => {
                 .library-content {
                   color: #000000 !important;
                   font-size: 16px;
-                  line-height: 1.8;
+                  line-height: 1.6;
                 }
                 .library-content * {
                   color: #000000 !important;
@@ -189,36 +189,40 @@ export const Library: React.FC = () => {
                   max-width: 400px !important;
                   width: auto !important;
                   height: auto !important;
-                  max-height: 300px !important;
+                  max-height: 280px !important;
                   object-fit: contain;
                   display: block;
-                  margin: 16px auto;
+                  margin: 8px auto !important;
                   border-radius: 8px;
                   border: 1px solid #e5e7eb;
                 }
                 .library-content h1 {
-                  font-size: 24px !important;
+                  font-size: 22px !important;
                   font-weight: 800 !important;
-                  margin-bottom: 16px !important;
+                  margin-bottom: 8px !important;
                   color: #000000 !important;
                 }
                 .library-content h2 {
-                  font-size: 20px !important;
+                  font-size: 18px !important;
                   font-weight: 700 !important;
-                  margin-top: 24px !important;
-                  margin-bottom: 12px !important;
+                  margin-top: 12px !important;
+                  margin-bottom: 6px !important;
                   color: #000000 !important;
                 }
                 .library-content p, .library-content div {
-                  margin-bottom: 12px;
+                  margin-bottom: 4px !important;
+                  margin-top: 0 !important;
                   white-space: pre-wrap;
                   color: #000000 !important;
                 }
                 .library-content .block {
-                  margin-bottom: 20px;
-                  padding: 16px;
-                  background: #f9fafb;
-                  border-radius: 12px;
+                  margin-bottom: 8px !important;
+                  padding: 0 !important;
+                  background: transparent !important;
+                  border-radius: 0 !important;
+                }
+                .library-content div[style*="margin"] {
+                  margin: 8px 0 !important;
                 }
               `}</style>
               <div
