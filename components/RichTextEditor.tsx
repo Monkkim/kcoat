@@ -330,51 +330,55 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
       <style>{`
         [contenteditable] {
           outline: none;
+          color: #000000;
         }
         [contenteditable] h1 {
-          font-size: 32px;
+          font-size: 22px;
           font-weight: 800;
-          margin: 24px 0 16px 0;
-          color: #1A1D2E;
+          margin: 8px 0;
+          color: #000000;
         }
         [contenteditable] h2 {
-          font-size: 24px;
+          font-size: 18px;
           font-weight: 700;
-          margin: 20px 0 12px 0;
-          color: #1A1D2E;
+          margin: 12px 0 6px 0;
+          color: #000000;
         }
         [contenteditable] h3 {
-          font-size: 20px;
+          font-size: 16px;
           font-weight: 600;
-          margin: 16px 0 8px 0;
-          color: #1A1D2E;
+          margin: 8px 0 4px 0;
+          color: #000000;
         }
         [contenteditable] p, [contenteditable] div:not(.img-resize-wrapper):not(.resize-handle) {
-          margin: 12px 0;
-          color: #374151;
+          margin: 4px 0;
+          color: #000000;
         }
         [contenteditable] ul {
           list-style-type: disc;
           padding-left: 24px;
-          margin: 16px 0;
+          margin: 8px 0;
         }
         [contenteditable] li {
-          margin: 8px 0;
+          margin: 4px 0;
+          color: #000000;
         }
         [contenteditable] hr {
           border: none;
           border-top: 2px solid #e5e7eb;
-          margin: 24px 0;
+          margin: 12px 0;
         }
         [contenteditable] img {
-          max-width: 100%;
+          max-width: 400px;
+          max-height: 280px;
           height: auto;
-          border-radius: 12px;
-          margin: 16px 0;
+          border-radius: 8px;
+          margin: 8px auto;
           display: block;
+          border: 1px solid #e5e7eb;
         }
         [contenteditable] .img-resize-wrapper {
-          margin: 16px 0;
+          margin: 8px 0;
         }
         [contenteditable] .img-resize-wrapper img {
           margin: 0;
@@ -382,12 +386,18 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
         }
         [contenteditable] strong, [contenteditable] b {
           font-weight: 700;
+          color: #000000;
         }
         [contenteditable] em, [contenteditable] i {
           font-style: italic;
         }
         [contenteditable] u {
           text-decoration: underline;
+        }
+        [contenteditable] .block {
+          margin: 8px 0;
+          padding: 0;
+          background: transparent;
         }
       `}</style>
     </div>
