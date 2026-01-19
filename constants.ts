@@ -44,4 +44,4 @@ export const ISSUE_TAGS = [
 ];
 
 // n8n 웹훅 주소
-export const WEBHOOK_URL = 'https://primary-production-c55d.up.railway.app/webhook-test/send-email';
+export const WEBHOOK_URL = 'https://primary-production-c55d.up.railway.app/webhook/send-email';
