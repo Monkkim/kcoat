@@ -343,41 +343,41 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
         [contenteditable] h2 {
           font-size: 18px;
           font-weight: 700;
-          margin: 16px 0 8px 0;
+          margin: 1em 0 0.5em 0;
           color: #000000;
           white-space: pre-wrap;
         }
         [contenteditable] h3 {
           font-size: 16px;
           font-weight: 600;
-          margin: 12px 0 6px 0;
+          margin: 1em 0 0.5em 0;
           color: #000000;
           white-space: pre-wrap;
         }
         [contenteditable] p, [contenteditable] div:not(.img-resize-wrapper):not(.resize-handle) {
-          margin: 8px 0;
+          margin: 0;
           color: #000000;
           white-space: pre-wrap;
         }
         [contenteditable] ul {
           list-style-type: disc;
           padding-left: 24px;
-          margin: 8px 0;
+          margin: 0.5em 0;
         }
         [contenteditable] li {
-          margin: 4px 0;
+          margin: 0;
           color: #000000;
         }
         [contenteditable] hr {
           border: none;
           border-top: 2px solid #e5e7eb;
-          margin: 12px 0;
+          margin: 1em 0;
         }
         [contenteditable] img {
           max-width: 500px;
           height: auto;
           border-radius: 8px;
-          margin: 8px auto !important;
+          margin: 1em auto !important;
           display: block;
           border: 1px solid #e5e7eb;
           cursor: pointer;
@@ -385,12 +385,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
         [contenteditable] .img-resize-wrapper {
           position: relative;
           display: inline-block;
-          margin: 8px auto !important;
+          margin: 1em auto !important;
           text-align: center;
           width: 100%;
         }
         [contenteditable] div[style*="margin"]:has(img) {
-          margin: 8px 0 !important;
+          margin: 1em 0 !important;
         }
         [contenteditable] .img-resize-wrapper img {
           margin: 0 auto;
