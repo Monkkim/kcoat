@@ -1,18 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
-import { N8NResponse } from '../types';
+import { N8NResponse, PhotoSet } from '../types';
 import { copyRichTextToClipboard } from '../utils';
-import { Loader2, Check, Copy, Layout, ArrowLeft, Save, Sparkles, Clock } from 'lucide-react';
+import { Loader2, Check, Copy, Layout, ArrowLeft, Save, Sparkles, Clock, Image as ImageIcon } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 
 interface Step3WorkspaceProps {
   isGenerating: boolean;
   result: N8NResponse | null;
+  photoSets: PhotoSet[];
   onBack: () => void;
   onComplete: () => void;
 }
 
-export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, result, onBack, onComplete }) => {
+export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, result, photoSets, onBack, onComplete }) => {
   const [title, setTitle] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [editorContent, setEditorContent] = useState('');
@@ -177,6 +178,58 @@ export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, re
                 rows={3}
               />
             </div>
+
+            {photoSets.filter(s => s.before || s.after).length > 0 && (
+              <div className="mt-10 pt-10 border-t border-gray-100">
+                <div className="flex items-center mb-6">
+                  <ImageIcon className="w-4 h-4 mr-2 text-[#FF6B35]" />
+                  <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest">업로드된 사진 ({photoSets.filter(s => s.before || s.after).length}세트)</div>
+                </div>
+                <p className="text-xs text-gray-400 mb-4">아래 사진을 클릭하여 에디터로 드래그하거나, 복사하여 본문에 붙여넣으세요.</p>
+                <div className="grid grid-cols-1 gap-6">
+                  {photoSets.filter(s => s.before || s.after).map((set, index) => (
+                    <div key={set.id} className="bg-gray-50 p-4 rounded-2xl">
+                      <div className="text-xs font-bold text-gray-400 mb-3">세트 #{index + 1}</div>
+                      <div className={`grid gap-3 ${set.type === 'three' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                        {set.before && (
+                          <div className="relative group">
+                            <img 
+                              src={set.before} 
+                              alt={`Before ${index + 1}`}
+                              className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                              draggable
+                            />
+                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-[10px] font-bold rounded">BEFORE</div>
+                          </div>
+                        )}
+                        {set.type === 'three' && set.middle && (
+                          <div className="relative group">
+                            <img 
+                              src={set.middle} 
+                              alt={`Middle ${index + 1}`}
+                              className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                              draggable
+                            />
+                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-[#3B82F6] text-white text-[10px] font-bold rounded">MIDDLE</div>
+                          </div>
+                        )}
+                        {set.after && (
+                          <div className="relative group">
+                            <img 
+                              src={set.after} 
+                              alt={`After ${index + 1}`}
+                              className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                              draggable
+                            />
+                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-[#FF6B35] text-white text-[10px] font-bold rounded">AFTER</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

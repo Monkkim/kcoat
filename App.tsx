@@ -34,7 +34,7 @@ const App: React.FC = () => {
   });
 
   const [photoSets, setPhotoSets] = useState<PhotoSet[]>([
-    { id: 'initial', before: null, after: null }
+    { id: 'initial', before: null, after: null, type: 'two' }
   ]);
 
   const [apiResult, setApiResult] = useState<N8NResponse | null>(null);
@@ -83,18 +83,19 @@ const App: React.FC = () => {
       .map((s, index) => {
         console.log(`📋 세트 ${index + 1} 처리:`, {
           beforeName: s.beforeName,
+          middleName: s.middleName,
           afterName: s.afterName,
-          beforePrefix: s.before?.substring(0, 50),
-          afterPrefix: s.after?.substring(0, 50),
-          beforeLength: s.before?.length,
-          afterLength: s.after?.length
+          type: s.type
         });
 
         return {
           before: s.before!,
+          middle: s.middle || null,
           after: s.after!,
           beforeName: s.beforeName,
-          afterName: s.afterName
+          middleName: s.middleName,
+          afterName: s.afterName,
+          type: s.type
         };
       });
 
@@ -328,6 +329,7 @@ const App: React.FC = () => {
             <Step3Workspace 
               isGenerating={isGenerating}
               result={apiResult}
+              photoSets={photoSets}
               onBack={() => setStep(2)}
               onComplete={() => setStep(4)}
             />

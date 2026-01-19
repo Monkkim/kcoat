@@ -4,9 +4,12 @@ export type WorkType = 'remodeling' | 'new' | 'occupied';
 export interface PhotoSet {
   id: string;
   before: string | null;
+  middle?: string | null;
   after: string | null;
   beforeName?: string;
+  middleName?: string;
   afterName?: string;
+  type: 'two' | 'three';
 }
 
 export interface KCoatFormData {
@@ -19,7 +22,7 @@ export interface KCoatFormData {
   workHours: number;
   issues: string[];
   useWatermark: boolean;
-  photoSets: { before: string; after: string }[];
+  photoSets: { before: string; middle?: string | null; after: string; type: 'two' | 'three' }[];
 }
 
 export type BlockType = 'text' | 'image';

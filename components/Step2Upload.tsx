@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { PhotoSet } from '../types';
 import { fileToBase64 } from '../utils';
-import { Plus, X, Image as ImageIcon, ArrowLeft, Camera, UploadCloud, Trash2, GripVertical } from 'lucide-react';
+import { Plus, X, ArrowLeft, UploadCloud, Trash2, GripVertical } from 'lucide-react';
 
 interface Step2UploadProps {
   photoSets: PhotoSet[];
@@ -14,73 +14,56 @@ interface Step2UploadProps {
 export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSets, onBack, onNext }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [uploadMode, setUploadMode] = useState<'two' | 'three'>('two');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const threePhotoInputRef = useRef<HTMLInputElement>(null);
 
-  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>, mode: 'two' | 'three') => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsProcessing(true);
-    // 파일 이름 순으로 먼저 정렬하여 Before/After 순서 보장
     const fileArray = Array.from(files).sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
     );
 
-    console.log('📁 업로드된 파일 목록:', fileArray.map(f => f.name));
-
     const uploadedSets: PhotoSet[] = [];
+    const groupSize = mode === 'three' ? 3 : 2;
 
-    // 각 파일을 순차적으로 처리하여 확실한 독립성 보장
-    for (let i = 0; i < fileArray.length; i += 2) {
+    for (let i = 0; i < fileArray.length; i += groupSize) {
       const beforeFile = fileArray[i];
-      const afterFile = fileArray[i + 1];
+      const middleFile = mode === 'three' ? fileArray[i + 1] : null;
+      const afterFile = mode === 'three' ? fileArray[i + 2] : fileArray[i + 1];
 
-      console.log(`🔄 세트 ${i/2 + 1} 처리 중:`, {
-        beforeName: beforeFile.name,
-        afterName: afterFile?.name
-      });
+      if (!beforeFile) continue;
 
-      // 각 파일을 명확하게 독립적으로 변환
       const beforeBase64 = await fileToBase64(beforeFile);
+      const middleBase64 = middleFile ? await fileToBase64(middleFile) : null;
       const afterBase64 = afterFile ? await fileToBase64(afterFile) : null;
-
-      // Base64 앞부분만 로그로 확인 (전체는 너무 길어서)
-      console.log(`✅ 세트 ${i/2 + 1} 변환 완료:`, {
-        beforePrefix: beforeBase64?.substring(0, 50),
-        afterPrefix: afterBase64?.substring(0, 50),
-        beforeLength: beforeBase64?.length,
-        afterLength: afterBase64?.length
-      });
 
       const newSet: PhotoSet = {
         id: `set-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
         before: beforeBase64,
+        middle: middleBase64,
         after: afterBase64,
         beforeName: beforeFile.name,
-        afterName: afterFile?.name || ''
+        middleName: middleFile?.name || '',
+        afterName: afterFile?.name || '',
+        type: mode
       };
 
       uploadedSets.push(newSet);
-
-      // 작은 딜레이로 각 파일 처리의 독립성 보장
       await new Promise(resolve => setTimeout(resolve, 10));
     }
 
-    console.log('📦 최종 uploadedSets 개수:', uploadedSets.length);
-
     setPhotoSets(prev => {
       const filteredPrev = prev.filter(s => s.before || s.after);
-      const newSets = [...filteredPrev, ...uploadedSets].slice(0, 10);
-      console.log('💾 상태 업데이트:', newSets.map((s, idx) => ({
-        index: idx,
-        beforePrefix: s.before?.substring(0, 30),
-        afterPrefix: s.after?.substring(0, 30)
-      })));
-      return newSets;
+      return [...filteredPrev, ...uploadedSets].slice(0, 10);
     });
 
     setIsProcessing(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (threePhotoInputRef.current) threePhotoInputRef.current.value = '';
   };
 
   const removeSet = (id: string) => {
@@ -88,7 +71,7 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
   };
 
   const clearAll = () => {
-    setPhotoSets([{ id: 'initial', before: null, after: null }]);
+    setPhotoSets([{ id: 'initial', before: null, after: null, type: 'two' }]);
   };
 
   const handleDragStart = (index: number) => {
@@ -117,44 +100,77 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-[#1A1D2E]">Before / After 사진 업로드</h2>
+        <h2 className="text-2xl font-bold text-[#1A1D2E]">시공 사진 업로드</h2>
         <p className="text-gray-500 mt-2 text-sm">
-          사진들을 한꺼번에 선택하세요. <b>파일 이름 순으로 2개씩 짝지어</b> 자동 정렬됩니다.
+          사진들을 한꺼번에 선택하세요. <b>파일 이름 순으로 자동 정렬</b>됩니다.
         </p>
       </div>
 
-      <div 
-        onClick={() => fileInputRef.current?.click()}
-        className="group relative h-48 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-200 bg-white hover:border-[#FF6B35] hover:bg-[#FF6B35]/5 transition-all cursor-pointer overflow-hidden shadow-sm"
-      >
-        <input 
-          ref={fileInputRef}
-          type="file" 
-          multiple 
-          accept="image/*" 
-          className="hidden" 
-          onChange={handleBulkUpload}
-        />
-        {isProcessing ? (
-          <div className="flex flex-col items-center animate-pulse">
-            <UploadCloud className="w-10 h-10 text-[#FF6B35] mb-2" />
-            <span className="text-sm font-bold text-[#FF6B35]">사진 처리 중...</span>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center group-hover:scale-105 transition-transform">
-            <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-white shadow-sm transition-colors">
-              <Plus className="w-8 h-8 text-[#FF6B35]" />
+      <div className="grid grid-cols-2 gap-4">
+        <div 
+          onClick={() => fileInputRef.current?.click()}
+          className="group relative h-40 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white hover:border-[#FF6B35] hover:bg-[#FF6B35]/5 transition-all cursor-pointer overflow-hidden shadow-sm"
+        >
+          <input 
+            ref={fileInputRef}
+            type="file" 
+            multiple 
+            accept="image/*" 
+            className="hidden" 
+            onChange={(e) => handleBulkUpload(e, 'two')}
+          />
+          {isProcessing ? (
+            <div className="flex flex-col items-center animate-pulse">
+              <UploadCloud className="w-8 h-8 text-[#FF6B35] mb-2" />
+              <span className="text-xs font-bold text-[#FF6B35]">처리 중...</span>
             </div>
-            <span className="text-sm font-bold text-[#1A1D2E]">전체 사진 선택하기</span>
-            <span className="text-xs text-gray-400 mt-1">파일들을 드래그하거나 클릭하여 업로드</span>
-          </div>
-        )}
+          ) : (
+            <div className="flex flex-col items-center group-hover:scale-105 transition-transform px-4 text-center">
+              <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mb-2 group-hover:bg-white shadow-sm transition-colors">
+                <Plus className="w-6 h-6 text-[#FF6B35]" />
+              </div>
+              <span className="text-sm font-bold text-[#1A1D2E]">Before / After</span>
+              <span className="text-xs text-gray-400 mt-1">2장씩 자동 짝지어짐</span>
+            </div>
+          )}
+        </div>
+
+        <div 
+          onClick={() => threePhotoInputRef.current?.click()}
+          className="group relative h-40 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white hover:border-[#3B82F6] hover:bg-[#3B82F6]/5 transition-all cursor-pointer overflow-hidden shadow-sm"
+        >
+          <input 
+            ref={threePhotoInputRef}
+            type="file" 
+            multiple 
+            accept="image/*" 
+            className="hidden" 
+            onChange={(e) => handleBulkUpload(e, 'three')}
+          />
+          {isProcessing ? (
+            <div className="flex flex-col items-center animate-pulse">
+              <UploadCloud className="w-8 h-8 text-[#3B82F6] mb-2" />
+              <span className="text-xs font-bold text-[#3B82F6]">처리 중...</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center group-hover:scale-105 transition-transform px-4 text-center">
+              <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mb-2 group-hover:bg-white shadow-sm transition-colors">
+                <Plus className="w-6 h-6 text-[#3B82F6]" />
+              </div>
+              <span className="text-sm font-bold text-[#1A1D2E]">Before / Middle / After</span>
+              <span className="text-xs text-gray-400 mt-1">3장씩 자동 짝지어짐</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {photoSets.some(s => s.before || s.after) && (
         <div className="space-y-4">
           <div className="flex justify-between items-center px-1">
-            <span className="text-sm font-bold text-[#1A1D2E]">생성된 세트 ({photoSets.filter(s => s.before || s.after).length})</span>
+            <span className="text-sm font-bold text-[#1A1D2E]">
+              생성된 세트 ({photoSets.filter(s => s.before || s.after).length})
+              <span className="text-xs text-gray-400 ml-2">드래그하여 순서 변경</span>
+            </span>
             <button 
               onClick={clearAll}
               className="text-xs font-semibold text-red-500 hover:underline flex items-center"
@@ -166,6 +182,8 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
           <div className="grid grid-cols-1 gap-4">
             {photoSets.map((set, index) => {
               if (!set.before && !set.after) return null;
+              const isThreePhoto = set.type === 'three';
+              
               return (
                 <div 
                   key={set.id} 
@@ -192,7 +210,7 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
                   
                   <div className="text-xs font-black text-gray-300 w-6 italic">#{index + 1}</div>
                   
-                  <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className={`flex-1 grid gap-3 ${isThreePhoto ? 'grid-cols-3' : 'grid-cols-2'}`}>
                     <div className="relative">
                       <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
                         {set.before ? (
@@ -203,6 +221,19 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
                       </div>
                       <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-[8px] font-bold rounded">BEFORE</div>
                     </div>
+
+                    {isThreePhoto && (
+                      <div className="relative">
+                        <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                          {set.middle ? (
+                            <img src={set.middle} className="w-full h-full object-cover" alt="Middle" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-300">No Image</div>
+                          )}
+                        </div>
+                        <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-[#3B82F6] text-white text-[8px] font-bold rounded">MIDDLE</div>
+                      </div>
+                    )}
 
                     <div className="relative">
                       <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
