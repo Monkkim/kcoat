@@ -210,16 +210,17 @@ export const Library: React.FC = () => {
                   color: #000000 !important;
                 }
                 .library-content p, .library-content div {
-                  margin-bottom: 4px !important;
-                  margin-top: 0 !important;
+                  margin: 8px 0 !important;
                   white-space: pre-wrap;
                   color: #000000 !important;
                 }
                 .library-content .block {
-                  margin-bottom: 8px !important;
+                  margin: 16px 0 !important;
                   padding: 0 !important;
                   background: transparent !important;
                   border-radius: 0 !important;
+                  white-space: pre-wrap;
+                  display: block;
                 }
                 .library-content div[style*="margin"] {
                   margin: 8px 0 !important;

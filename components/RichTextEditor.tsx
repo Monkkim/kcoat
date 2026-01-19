@@ -331,28 +331,33 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
         [contenteditable] {
           outline: none;
           color: #000000;
+          white-space: pre-wrap;
         }
         [contenteditable] h1 {
           font-size: 22px;
           font-weight: 800;
-          margin: 8px 0;
+          margin: 16px 0 8px 0;
           color: #000000;
+          white-space: pre-wrap;
         }
         [contenteditable] h2 {
           font-size: 18px;
           font-weight: 700;
-          margin: 12px 0 6px 0;
+          margin: 16px 0 8px 0;
           color: #000000;
+          white-space: pre-wrap;
         }
         [contenteditable] h3 {
           font-size: 16px;
           font-weight: 600;
-          margin: 8px 0 4px 0;
+          margin: 12px 0 6px 0;
           color: #000000;
+          white-space: pre-wrap;
         }
         [contenteditable] p, [contenteditable] div:not(.img-resize-wrapper):not(.resize-handle) {
-          margin: 4px 0;
+          margin: 8px 0;
           color: #000000;
+          white-space: pre-wrap;
         }
         [contenteditable] ul {
           list-style-type: disc;
@@ -395,9 +400,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
           text-decoration: underline;
         }
         [contenteditable] .block {
-          margin: 8px 0;
+          margin: 16px 0;
           padding: 0;
           background: transparent;
+          white-space: pre-wrap;
+          display: block;
         }
       `}</style>
     </div>
