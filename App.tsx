@@ -9,7 +9,7 @@ import { Sidebar } from './components/Sidebar';
 import { Library } from './components/Library';
 import { KCoatFormData, PhotoSet, N8NResponse } from './types';
 import { formatDate } from './utils';
-import { WEBHOOK_URL } from './constants';
+import { WEBHOOK_URL, PRODUCT_OPTIONS } from './constants';
 import { Sparkles, Crown, LogOut, User } from 'lucide-react';
 
 interface AuthUser {
@@ -180,7 +180,8 @@ const App: React.FC = () => {
 
       const responseData = Array.isArray(data) ? data[0] : data;
 
-      let finalTitle = responseData.title || `(${formData.detailedLocation}) 탄성코트 시공`;
+      const productLabel = PRODUCT_OPTIONS.find(p => p.value === formData.productType)?.label || '탄성코트';
+      let finalTitle = responseData.title || `(${formData.buildingName}) ${productLabel} 시공`;
       let finalSections: { type: string; content: string }[] = [];
       let finalImages: string[] = [];
       let finalHashtags = "#탄성코트 #KCOAT #베란다칠 #결로방지";
