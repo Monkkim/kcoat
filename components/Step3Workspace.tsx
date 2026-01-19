@@ -95,7 +95,6 @@ export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, re
             <Sparkles className="w-6 h-6 mr-3 text-[#FF6B35]" />
             블로그 에디터 워크스페이스
           </h2>
-          <p className="text-gray-400 text-sm mt-1">텍스트가 먼저 생성됩니다. 사진이 도착하면 본문에 배치하세요.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
