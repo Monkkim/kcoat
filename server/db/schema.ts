@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, timestamp, text } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, text, integer, jsonb } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -34,3 +34,24 @@ export const resetPasswordSchema = z.object({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type SelectUser = typeof users.$inferSelect;
+
+export const blogPosts = pgTable('blog_posts', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  title: varchar('title', { length: 500 }).notNull(),
+  content: text('content').notNull(),
+  buildingName: varchar('building_name', { length: 255 }),
+  workDate: varchar('work_date', { length: 50 }),
+  productType: varchar('product_type', { length: 100 }),
+  photoSets: jsonb('photo_sets'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts, {
+  title: z.string().min(1, '제목을 입력해주세요'),
+  content: z.string().min(1, '내용을 입력해주세요'),
+});
+
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type SelectBlogPost = typeof blogPosts.$inferSelect;
