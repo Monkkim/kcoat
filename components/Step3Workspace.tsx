@@ -40,19 +40,17 @@ export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, re
   }, [result]);
 
   const handleCopy = async () => {
-    const finalHtml = `
-      <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; line-height: 1.8; color: #333; max-width: 700px; margin: 0 auto;">
-        <h1 style="font-size: 28px; color: #1A1D2E; text-align: center; margin-bottom: 40px; border-bottom: 3px solid #FF6B35; padding-bottom: 15px; font-weight: bold;">
-          ${title}
-        </h1>
-        
-        ${editorContent}
-        
-        <div style="margin-top: 60px; padding: 25px; background-color: #f8f9fa; border-radius: 12px; color: #666; font-size: 14px;">
-          ${hashtags}
-        </div>
-      </div>
-    `;
+    // 에디터 콘텐츠에서 불필요한 wrapper 클래스 제거하고 깔끔한 HTML 생성
+    let cleanContent = editorContent
+      .replace(/class="img-resize-wrapper"/g, '')
+      .replace(/class="resize-handle"[^>]*>.*?<\/div>/gs, '')
+      .replace(/class="block[^"]*"/g, '')
+      .replace(/style="[^"]*margin:\s*\d+px[^"]*"/g, '')
+      .replace(/<div[^>]*>\s*<\/div>/g, '');
+    
+    const finalHtml = `<h1 style="font-size: 24px; color: #000; text-align: center; margin-bottom: 20px; font-weight: bold;">${title}</h1>
+${cleanContent}
+<p style="margin-top: 30px; color: #666; font-size: 14px;">${hashtags}</p>`;
     
     const success = await copyRichTextToClipboard(finalHtml);
     if (success) {

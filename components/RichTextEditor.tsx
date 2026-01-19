@@ -374,23 +374,41 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
           margin: 12px 0;
         }
         [contenteditable] img {
-          max-width: 400px;
-          max-height: 280px;
+          max-width: 500px;
           height: auto;
           border-radius: 8px;
-          margin: 4px auto !important;
+          margin: 8px auto !important;
           display: block;
           border: 1px solid #e5e7eb;
+          cursor: pointer;
         }
         [contenteditable] .img-resize-wrapper {
-          margin: 4px 0 !important;
+          position: relative;
+          display: inline-block;
+          margin: 8px auto !important;
+          text-align: center;
+          width: 100%;
         }
         [contenteditable] div[style*="margin"]:has(img) {
-          margin: 4px 0 !important;
+          margin: 8px 0 !important;
         }
         [contenteditable] .img-resize-wrapper img {
-          margin: 0;
+          margin: 0 auto;
           display: block;
+        }
+        [contenteditable] .resize-handle {
+          position: absolute;
+          right: 4px;
+          bottom: 4px;
+          width: 20px;
+          height: 20px;
+          background: #FF6B35;
+          border-radius: 4px;
+          cursor: se-resize;
+          z-index: 100;
+        }
+        [contenteditable] .img-resize-wrapper:hover .resize-handle {
+          opacity: 1 !important;
         }
         [contenteditable] strong, [contenteditable] b {
           font-weight: 700;
