@@ -5,6 +5,8 @@ import { Step2Upload } from './components/Step2Upload';
 import { Step3Workspace } from './components/Step3Workspace';
 import { Step4Success } from './components/Step4Success';
 import { AuthPage } from './components/AuthPage';
+import { Sidebar } from './components/Sidebar';
+import { Library } from './components/Library';
 import { KCoatFormData, PhotoSet, N8NResponse } from './types';
 import { formatDate } from './utils';
 import { WEBHOOK_URL } from './constants';
@@ -19,7 +21,10 @@ interface AuthUser {
 const App: React.FC = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [activeMenu, setActiveMenu] = useState<'create' | 'library'>('create');
   const [step, setStep] = useState(1);
+  const [generatedTitle, setGeneratedTitle] = useState('');
+  const [generatedContent, setGeneratedContent] = useState('');
   const [formData, setFormData] = useState<KCoatFormData>({
     buildingName: '',
     workDate: formatDate(new Date()),
@@ -250,12 +255,55 @@ const App: React.FC = () => {
         hashtags: finalHashtags
       });
       
+      setGeneratedTitle(finalTitle);
       setIsGenerating(false);
     } catch (err) {
       console.error('전송 에러:', err);
       alert("생성 중 오류가 발생했습니다. (연결 시간이 너무 길거나 데이터 형식이 다를 수 있습니다)");
       setIsGenerating(false);
       setStep(2);
+    }
+  };
+
+  const saveBlogPost = async (title: string, content: string) => {
+    try {
+      const res = await fetch('/api/blog-posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title,
+          content,
+          buildingName: formData.buildingName,
+          workDate: formData.workDate,
+          productType: formData.productType,
+          photoSets: photoSets.filter(s => s.before || s.after)
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save blog post');
+      }
+
+      setActiveMenu('library');
+      setStep(1);
+      setApiResult(null);
+      setFormData({
+        buildingName: '',
+        workDate: formatDate(new Date()),
+        workType: 'remodeling',
+        detailedLocation: '',
+        productType: '',
+        productColor: '',
+        workHours: 4,
+        issues: [],
+        useWatermark: true,
+        photoSets: []
+      });
+      setPhotoSets([{ id: 'initial', before: null, after: null, type: 'two' }]);
+    } catch (err) {
+      console.error('Error saving blog post:', err);
+      alert('저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -275,76 +323,79 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-[#FAF9F6]">
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="bg-[#FF6B35] p-2 rounded-lg shadow-sm">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-xl font-black text-[#1A1D2E] tracking-tight">K-COAT <span className="text-[#FF6B35]">STUDIO</span></h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <User className="w-4 h-4" />
-              <span>{user.name}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>로그아웃</span>
-            </button>
-            <div className="flex items-center space-x-1 bg-[#1A1D2E] text-white px-3 py-1.5 rounded-full text-[10px] font-bold">
-              <Crown className="w-3 h-3 text-yellow-400" />
-              <span>PRO PLAN</span>
+    <div className="min-h-screen flex bg-[#FAF9F6]">
+      <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
+      
+      <div className="flex-1 flex flex-col">
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 shadow-sm">
+          <div className="flex justify-end items-center">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                <span>{user.name}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>로그아웃</span>
+              </button>
+              <div className="flex items-center space-x-1 bg-[#1A1D2E] text-white px-3 py-1.5 rounded-full text-[10px] font-bold">
+                <Crown className="w-3 h-3 text-yellow-400" />
+                <span>PRO PLAN</span>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className={`${step >= 3 ? 'max-w-7xl' : 'max-w-3xl'} mx-auto px-6 pt-10 transition-all duration-700`}>
-        <StepIndicator currentStep={step} />
+        {activeMenu === 'library' ? (
+          <Library />
+        ) : (
+          <main className={`${step >= 3 ? 'max-w-7xl' : 'max-w-3xl'} mx-auto px-6 pt-10 pb-20 transition-all duration-700 w-full`}>
+            <StepIndicator currentStep={step} />
 
-        <div className="mt-8">
-          {step === 1 && (
-            <Step1Form 
-              data={formData} 
-              updateData={updateFormData} 
-              onNext={() => setStep(2)} 
-            />
-          )}
+            <div className="mt-8">
+              {step === 1 && (
+                <Step1Form 
+                  data={formData} 
+                  updateData={updateFormData} 
+                  onNext={() => setStep(2)} 
+                />
+              )}
 
-          {step === 2 && (
-            <Step2Upload 
-              photoSets={photoSets} 
-              setPhotoSets={setPhotoSets} 
-              onBack={() => setStep(1)} 
-              onNext={startGeneration} 
-            />
-          )}
+              {step === 2 && (
+                <Step2Upload 
+                  photoSets={photoSets} 
+                  setPhotoSets={setPhotoSets} 
+                  onBack={() => setStep(1)} 
+                  onNext={startGeneration} 
+                />
+              )}
 
-          {step === 3 && (
-            <Step3Workspace 
-              isGenerating={isGenerating}
-              result={apiResult}
-              photoSets={photoSets}
-              onBack={() => setStep(2)}
-              onComplete={() => setStep(4)}
-            />
-          )}
+              {step === 3 && (
+                <Step3Workspace 
+                  isGenerating={isGenerating}
+                  result={apiResult}
+                  photoSets={photoSets}
+                  onBack={() => setStep(2)}
+                  onComplete={saveBlogPost}
+                  title={generatedTitle}
+                />
+              )}
 
-          {step === 4 && (
-            <Step4Success 
-              onReset={() => {
-                setStep(1);
-                setApiResult(null);
-              }}
-            />
-          )}
-        </div>
-      </main>
+              {step === 4 && (
+                <Step4Success 
+                  onReset={() => {
+                    setStep(1);
+                    setApiResult(null);
+                  }}
+                />
+              )}
+            </div>
+          </main>
+        )}
+      </div>
     </div>
   );
 };

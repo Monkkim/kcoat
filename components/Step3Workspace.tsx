@@ -10,10 +10,11 @@ interface Step3WorkspaceProps {
   result: N8NResponse | null;
   photoSets: PhotoSet[];
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (title: string, content: string) => void;
+  title?: string;
 }
 
-export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, result, photoSets, onBack, onComplete }) => {
+export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, result, photoSets, onBack, onComplete, title: initialTitle }) => {
   const [title, setTitle] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [editorContent, setEditorContent] = useState('');
@@ -21,7 +22,7 @@ export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, re
 
   useEffect(() => {
     if (result) {
-      setTitle(result.title || '');
+      setTitle(initialTitle || result.title || '');
       setHashtags(result.hashtags || '');
 
       // HTML 필드가 있으면 에디터에 직접 설정 (가운데 정렬 적용)
@@ -99,7 +100,7 @@ export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, re
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
             <button 
-              onClick={onComplete}
+              onClick={() => onComplete(title, editorContent)}
               disabled={isGenerating || !editorContent}
               className="px-6 py-2.5 bg-[#1A1D2E] text-white rounded-xl text-sm font-black flex items-center justify-center hover:bg-black transition-all shadow-xl disabled:opacity-50"
             >
