@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 ### Application Flow
 The app follows a 4-step wizard pattern:
 1. **Step 1 (Form):** Collect construction site metadata (building name, date, product type, issues)
-2. **Step 2 (Upload):** Bulk upload before/after photo pairs with automatic pairing by filename
+2. **Step 2 (Upload):** Bulk upload photo sets (2-photo Before/After or 3-photo Before/Middle/After) with drag-and-drop reordering
 3. **Step 3 (Workspace):** AI content generation with real-time progress, drag-and-drop block editor for content arrangement
 4. **Step 4 (Success):** Confirmation and reset options
 
