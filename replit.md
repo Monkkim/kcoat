@@ -37,11 +37,22 @@ Preferred communication style: Simple, everyday language.
 - **Required Secret:** SESSION_SECRET environment variable
 
 ### Application Flow
-The app follows a 4-step wizard pattern:
+The app uses a dashboard layout with left sidebar navigation:
+- **Sidebar Menu:**
+  - 블로그 생성하기 (Create Blog): 4-step wizard for blog creation
+  - 라이브러리 (Library): View and manage saved blog posts
+
+**Blog Creation (4-step wizard):**
 1. **Step 1 (Form):** Collect construction site metadata (building name, date, product type, issues)
 2. **Step 2 (Upload):** Bulk upload photo sets (2-photo Before/After or 3-photo Before/Middle/After) with drag-and-drop reordering
 3. **Step 3 (Workspace):** AI content generation with real-time progress, drag-and-drop block editor for content arrangement
-4. **Step 4 (Success):** Confirmation and reset options
+4. **Save & Library:** Click "작업 완료 및 저장" button saves post to database and navigates to Library
+
+**Library Features:**
+- View all saved blog posts with title, building name, work date
+- Search functionality to filter posts
+- Copy content to clipboard for Naver Blog
+- Delete individual posts
 
 ### Content Generation
 - **Webhook Integration:** Sends form data and photos to an n8n webhook endpoint for AI processing
