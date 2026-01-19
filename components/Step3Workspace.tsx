@@ -40,17 +40,32 @@ export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, re
   }, [result]);
 
   const handleCopy = async () => {
-    // 에디터 콘텐츠에서 불필요한 wrapper 클래스 제거하고 깔끔한 HTML 생성
+    // 네이버 블로그용 깔끔한 HTML 생성
     let cleanContent = editorContent
-      .replace(/class="img-resize-wrapper"/g, '')
-      .replace(/class="resize-handle"[^>]*>.*?<\/div>/gs, '')
-      .replace(/class="block[^"]*"/g, '')
-      .replace(/style="[^"]*margin:\s*\d+px[^"]*"/g, '')
-      .replace(/<div[^>]*>\s*<\/div>/g, '');
+      // 리사이즈 핸들 제거
+      .replace(/<div class="resize-handle"[^>]*>[\s\S]*?<\/div>/gi, '')
+      // img-resize-wrapper를 이미지만 남기고 제거
+      .replace(/<div[^>]*class="img-resize-wrapper"[^>]*>([\s\S]*?)<\/div>/gi, '$1')
+      // 모든 class 속성 제거
+      .replace(/\s*class="[^"]*"/gi, '')
+      // 복잡한 style 속성 제거 (이미지 제외)
+      .replace(/<(div|p|span)([^>]*)style="[^"]*"([^>]*)>/gi, '<$1$2$3>')
+      // 빈 div 제거
+      .replace(/<div>\s*<\/div>/gi, '')
+      // div를 p로 변환하고 줄바꿈 추가
+      .replace(/<\/div>\s*<div>/gi, '<br><br>')
+      .replace(/<div>/gi, '<p>')
+      .replace(/<\/div>/gi, '</p>')
+      // 연속된 br 정리
+      .replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>')
+      // p 태그 사이에 줄바꿈 보장
+      .replace(/<\/p>\s*<p>/gi, '</p><br><br><p>');
     
-    const finalHtml = `<h1 style="font-size: 24px; color: #000; text-align: center; margin-bottom: 20px; font-weight: bold;">${title}</h1>
+    const finalHtml = `<p style="text-align: center; font-size: 24px; font-weight: bold;">${title}</p>
+<br><br>
 ${cleanContent}
-<p style="margin-top: 30px; color: #666; font-size: 14px;">${hashtags}</p>`;
+<br><br>
+<p style="color: #666; font-size: 14px;">${hashtags}</p>`;
     
     const success = await copyRichTextToClipboard(finalHtml);
     if (success) {
