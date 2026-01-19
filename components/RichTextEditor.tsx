@@ -378,12 +378,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
           max-height: 280px;
           height: auto;
           border-radius: 8px;
-          margin: 8px auto;
+          margin: 4px auto !important;
           display: block;
           border: 1px solid #e5e7eb;
         }
         [contenteditable] .img-resize-wrapper {
-          margin: 8px 0;
+          margin: 4px 0 !important;
+        }
+        [contenteditable] div[style*="margin"]:has(img) {
+          margin: 4px 0 !important;
         }
         [contenteditable] .img-resize-wrapper img {
           margin: 0;

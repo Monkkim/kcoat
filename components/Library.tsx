@@ -192,9 +192,12 @@ export const Library: React.FC = () => {
                   max-height: 280px !important;
                   object-fit: contain;
                   display: block;
-                  margin: 8px auto !important;
+                  margin: 4px auto !important;
                   border-radius: 8px;
                   border: 1px solid #e5e7eb;
+                }
+                .library-content div[style*="margin"]:has(img) {
+                  margin: 4px 0 !important;
                 }
                 .library-content h1 {
                   font-size: 22px !important;
