@@ -190,41 +190,47 @@ export const Step3Workspace: React.FC<Step3WorkspaceProps> = ({ isGenerating, re
                   {photoSets.filter(s => s.before || s.after).map((set, index) => (
                     <div key={set.id} className="bg-gray-50 p-4 rounded-2xl">
                       <div className="text-xs font-bold text-gray-400 mb-3">세트 #{index + 1}</div>
-                      <div className={`grid gap-3 ${set.type === 'three' ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                        {set.before && (
-                          <div className="relative group">
-                            <img 
-                              src={set.before} 
-                              alt={`Before ${index + 1}`}
-                              className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
-                              draggable
-                            />
-                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-[10px] font-bold rounded">BEFORE</div>
+                      {(() => {
+                        const imageCount = [set.before, set.middle, set.after].filter(Boolean).length;
+                        const gridCols = imageCount === 3 ? 'grid-cols-3' : 'grid-cols-2';
+                        return (
+                          <div className={`grid gap-3 ${gridCols}`}>
+                            {set.before && (
+                              <div className="relative group">
+                                <img 
+                                  src={set.before} 
+                                  alt={`Before ${index + 1}`}
+                                  className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                                  draggable
+                                />
+                                <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-[10px] font-bold rounded">BEFORE</div>
+                              </div>
+                            )}
+                            {set.middle && (
+                              <div className="relative group">
+                                <img 
+                                  src={set.middle} 
+                                  alt={`Middle ${index + 1}`}
+                                  className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                                  draggable
+                                />
+                                <div className="absolute bottom-2 left-2 px-2 py-1 bg-[#3B82F6] text-white text-[10px] font-bold rounded">MIDDLE</div>
+                              </div>
+                            )}
+                            {set.after && (
+                              <div className="relative group">
+                                <img 
+                                  src={set.after} 
+                                  alt={`After ${index + 1}`}
+                                  className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                                  draggable
+                                />
+                                <div className="absolute bottom-2 left-2 px-2 py-1 bg-[#FF6B35] text-white text-[10px] font-bold rounded">AFTER</div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {set.type === 'three' && set.middle && (
-                          <div className="relative group">
-                            <img 
-                              src={set.middle} 
-                              alt={`Middle ${index + 1}`}
-                              className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
-                              draggable
-                            />
-                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-[#3B82F6] text-white text-[10px] font-bold rounded">MIDDLE</div>
-                          </div>
-                        )}
-                        {set.after && (
-                          <div className="relative group">
-                            <img 
-                              src={set.after} 
-                              alt={`After ${index + 1}`}
-                              className="w-full aspect-[4/3] object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
-                              draggable
-                            />
-                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-[#FF6B35] text-white text-[10px] font-bold rounded">AFTER</div>
-                          </div>
-                        )}
-                      </div>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>

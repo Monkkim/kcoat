@@ -182,7 +182,8 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
           <div className="grid grid-cols-1 gap-4">
             {photoSets.map((set, index) => {
               if (!set.before && !set.after) return null;
-              const isThreePhoto = set.type === 'three';
+              const imageCount = [set.before, set.middle, set.after].filter(Boolean).length;
+              const gridCols = imageCount === 3 ? 'grid-cols-3' : 'grid-cols-2';
               
               return (
                 <div 
@@ -210,7 +211,7 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
                   
                   <div className="text-xs font-black text-gray-300 w-6 italic">#{index + 1}</div>
                   
-                  <div className={`flex-1 grid gap-3 ${isThreePhoto ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  <div className={`flex-1 grid gap-3 ${gridCols}`}>
                     <div className="relative">
                       <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
                         {set.before ? (
@@ -222,14 +223,10 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
                       <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-[8px] font-bold rounded">BEFORE</div>
                     </div>
 
-                    {isThreePhoto && (
+                    {set.middle && (
                       <div className="relative">
                         <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
-                          {set.middle ? (
-                            <img src={set.middle} className="w-full h-full object-cover" alt="Middle" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-300">No Image</div>
-                          )}
+                          <img src={set.middle} className="w-full h-full object-cover" alt="Middle" />
                         </div>
                         <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-[#3B82F6] text-white text-[8px] font-bold rounded">MIDDLE</div>
                       </div>
