@@ -100,14 +100,16 @@ export const Library: React.FC = () => {
 
   const startEditing = () => {
     if (selectedPost) {
+      setEditContent(selectedPost.content);
       setIsEditing(true);
-      setTimeout(() => {
-        if (editorRef.current) {
-          editorRef.current.innerHTML = selectedPost.content;
-        }
-      }, 0);
     }
   };
+
+  useEffect(() => {
+    if (isEditing && editorRef.current && editContent) {
+      editorRef.current.innerHTML = editContent;
+    }
+  }, [isEditing]);
 
   const cancelEditing = () => {
     setIsEditing(false);
