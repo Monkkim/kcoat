@@ -105,23 +105,17 @@ export const Library: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (isEditing && editorRef.current && editContent) {
-      editorRef.current.innerHTML = editContent;
-    }
-  }, [isEditing]);
-
   const cancelEditing = () => {
     setIsEditing(false);
     setEditContent('');
   };
 
   const saveEdit = async () => {
-    if (!selectedPost || !editorRef.current) return;
+    if (!selectedPost) return;
     
     setIsSaving(true);
     try {
-      const newContent = editorRef.current.innerHTML;
+      const newContent = editContent;
       const res = await fetch(`/api/blog-posts/${selectedPost.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -368,11 +362,11 @@ export const Library: React.FC = () => {
                 }
               `}</style>
               {isEditing ? (
-                <div
-                  ref={editorRef}
-                  contentEditable
-                  className="library-content outline-none border-2 border-blue-300 rounded-xl p-4 min-h-[400px] bg-blue-50/30"
-                  suppressContentEditableWarning
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full h-full min-h-[500px] p-4 border-2 border-blue-300 rounded-xl bg-blue-50/30 text-black font-mono text-sm resize-none outline-none focus:border-blue-500"
+                  placeholder="HTML 콘텐츠를 수정하세요..."
                 />
               ) : (
                 <div
