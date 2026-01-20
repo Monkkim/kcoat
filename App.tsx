@@ -44,6 +44,7 @@ const App: React.FC = () => {
 
   const [apiResult, setApiResult] = useState<N8NResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showGeneratingModal, setShowGeneratingModal] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -106,43 +107,47 @@ const App: React.FC = () => {
 
     console.log('✅ 처리된 세트 개수:', processedSets.length);
 
-    const uniqueCheck = processedSets.map((set, idx) => ({
-      index: idx,
-      beforeHash: set.before.substring(0, 100),
-      afterHash: set.after.substring(0, 100)
-    }));
-    console.log('🔍 고유성 체크:', uniqueCheck);
-
-    const finalPayload = {
-      buildingName: formData.buildingName,
-      workDate: formData.workDate,
-      workType: formData.workType,
-      detailedLocation: formData.detailedLocation,
-      productType: formData.productType,
-      productColor: formData.productColor,
-      workHours: formData.workHours,
-      issues: formData.issues,
-      photoSets: processedSets
-    };
-
-    console.log('📦 웹훅으로 전송할 페이로드:', {
-      ...finalPayload,
-      photoSets: processedSets.map((s, i) => ({
-        index: i,
-        beforeName: s.beforeName,
-        afterName: s.afterName,
-        beforeSize: s.before.length,
-        afterSize: s.after.length
-      }))
-    });
-
-    setStep(3);
-    setIsGenerating(true);
-    setApiResult(null);
+    const productLabel = PRODUCT_OPTIONS.find(p => p.value === formData.productType)?.label || '탄성코트';
+    const initialTitle = `(${formData.buildingName}) ${productLabel} 시공`;
 
     try {
-      console.log("Sending request to:", WEBHOOK_URL);
-      const response = await fetch(WEBHOOK_URL, {
+      const createRes = await fetch('/api/blog-posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: initialTitle,
+          content: '',
+          buildingName: formData.buildingName,
+          workDate: formData.workDate,
+          productType: formData.productType,
+          photoSets: processedSets,
+          status: 'generating'
+        })
+      });
+
+      if (!createRes.ok) {
+        throw new Error('Failed to create blog post');
+      }
+
+      const newPost = await createRes.json();
+      console.log('📝 생성중 상태로 블로그 포스트 생성됨:', newPost.id);
+
+      setShowGeneratingModal(true);
+
+      const finalPayload = {
+        buildingName: formData.buildingName,
+        workDate: formData.workDate,
+        workType: formData.workType,
+        detailedLocation: formData.detailedLocation,
+        productType: formData.productType,
+        productColor: formData.productColor,
+        workHours: formData.workHours,
+        issues: formData.issues,
+        photoSets: processedSets
+      };
+
+      fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -150,120 +155,146 @@ const App: React.FC = () => {
         },
         mode: 'cors',
         body: JSON.stringify(finalPayload),
-      });
+      }).then(async (response) => {
+        console.log("Webhook response status:", response.status);
 
-      console.log("Response status:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response body:", errorText);
-        throw new Error(`서버 응답 오류: ${response.status} ${errorText}`);
-      }
-
-      const text = await response.text();
-      console.log("Raw response text:", text);
-      
-      if (!text || text.trim() === "") {
-        console.error("Empty response from n8n");
-        throw new Error("n8n 서버에서 빈 데이터를 보냈습니다. 'Respond to Webhook' 노드의 Response Body 설정을 확인해주세요.");
-      }
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        console.error("JSON parse error:", e);
-        throw new Error("서버 응답이 올바른 JSON 형식이 아닙니다. n8n 설정을 확인해주세요.");
-      }
-      
-      console.log("Parsed data:", data);
-
-      const responseData = Array.isArray(data) ? data[0] : data;
-
-      const productLabel = PRODUCT_OPTIONS.find(p => p.value === formData.productType)?.label || '탄성코트';
-      let finalTitle = responseData.title || `(${formData.buildingName}) ${productLabel} 시공`;
-      let finalSections: { type: string; content: string }[] = [];
-      let finalImages: string[] = [];
-      let finalHashtags = "#탄성코트 #KCOAT #베란다칠 #결로방지";
-
-      if (responseData.html) {
-        finalSections = [{
-          type: 'full_html',
-          content: responseData.html
-        }];
-      } else {
-        const sectionKeyMap: { [key: string]: string } = {
-          '인트로': 'intro',
-          '제품': 'product',
-          '오프닝': 'opening',
-          'USP': 'usp',
-          'FAQ': 'faq',
-          'TECH': 'tech',
-          '철학': 'philosophy',
-          '과정': 'process',
-          '정리': 'recap',
-          '헤더': 'header'
-        };
-
-        for (const [koreanKey, englishType] of Object.entries(sectionKeyMap)) {
-          if (responseData[koreanKey]) {
-            finalSections.push({
-              type: englishType,
-              content: responseData[koreanKey]
-            });
-          }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Error response body:", errorText);
+          await fetch(`/api/blog-posts/${newPost.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              content: '생성 중 오류가 발생했습니다.',
+              status: 'completed'
+            })
+          });
+          return;
         }
-      }
 
-      if (responseData['해시태그']) {
-        finalHashtags = responseData['해시태그'];
-      } else if (responseData.hashtags) {
-        finalHashtags = responseData.hashtags;
-      }
+        const text = await response.text();
+        console.log("Raw response text:", text);
+        
+        if (!text || text.trim() === "") {
+          console.error("Empty response from n8n");
+          await fetch(`/api/blog-posts/${newPost.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              content: 'n8n 서버에서 빈 데이터를 보냈습니다.',
+              status: 'completed'
+            })
+          });
+          return;
+        }
 
-      if (responseData.images && Array.isArray(responseData.images)) {
-        finalImages = responseData.images.map((img: any) => {
-          if (typeof img === 'string') {
-            return img;
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error("JSON parse error:", e);
+          await fetch(`/api/blog-posts/${newPost.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              content: '서버 응답이 올바른 JSON 형식이 아닙니다.',
+              status: 'completed'
+            })
+          });
+          return;
+        }
+        
+        console.log("Parsed data:", data);
+
+        const responseData = Array.isArray(data) ? data[0] : data;
+
+        let finalTitle = responseData.title || initialTitle;
+        let finalContent = '';
+        let finalHashtags = "#탄성코트 #KCOAT #베란다칠 #결로방지";
+
+        if (responseData.html) {
+          finalContent = responseData.html;
+        } else {
+          const sectionKeyMap: { [key: string]: string } = {
+            '인트로': 'intro',
+            '제품': 'product',
+            '오프닝': 'opening',
+            'USP': 'usp',
+            'FAQ': 'faq',
+            'TECH': 'tech',
+            '철학': 'philosophy',
+            '과정': 'process',
+            '정리': 'recap',
+            '헤더': 'header'
+          };
+
+          const contentParts: string[] = [];
+          for (const [koreanKey] of Object.entries(sectionKeyMap)) {
+            if (responseData[koreanKey]) {
+              contentParts.push(responseData[koreanKey]);
+            }
           }
-          if (img.html) {
-            const match = img.html.match(/src="([^"]+)"/);
-            return match ? match[1] : '';
-          }
-          if (img.url) {
-            return img.url;
-          }
-          return '';
-        }).filter((url: string) => url);
-      }
+          finalContent = contentParts.join('\n\n');
+        }
 
-      if (!finalSections.length && responseData.sections) {
-        finalSections = responseData.sections;
-      }
+        if (responseData['해시태그']) {
+          finalHashtags = responseData['해시태그'];
+        } else if (responseData.hashtags) {
+          finalHashtags = responseData.hashtags;
+        }
 
-      if (!finalSections.length && responseData.html) {
-        finalSections = [{
-          type: 'text',
-          content: responseData.html
-        }];
-      }
+        await fetch(`/api/blog-posts/${newPost.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            title: finalTitle,
+            content: finalContent,
+            hashtags: finalHashtags,
+            status: 'completed'
+          })
+        });
 
-      setApiResult({
-        success: true,
-        title: finalTitle,
-        sections: finalSections,
-        images: finalImages,
-        hashtags: finalHashtags
+        console.log('✅ 블로그 포스트 생성 완료:', newPost.id);
+      }).catch(async (err) => {
+        console.error('웹훅 에러:', err);
+        await fetch(`/api/blog-posts/${newPost.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            content: '생성 중 오류가 발생했습니다: ' + err.message,
+            status: 'completed'
+          })
+        });
       });
-      
-      setGeneratedTitle(finalTitle);
-      setIsGenerating(false);
+
     } catch (err) {
-      console.error('전송 에러:', err);
-      alert("생성 중 오류가 발생했습니다. (연결 시간이 너무 길거나 데이터 형식이 다를 수 있습니다)");
-      setIsGenerating(false);
-      setStep(2);
+      console.error('포스트 생성 에러:', err);
+      alert("블로그 포스트 생성에 실패했습니다.");
     }
+  };
+
+  const handleGeneratingModalConfirm = () => {
+    setShowGeneratingModal(false);
+    setStep(1);
+    setApiResult(null);
+    setFormData({
+      buildingName: '',
+      workDate: formatDate(new Date()),
+      workType: 'remodeling',
+      detailedLocation: '',
+      productType: '',
+      productColor: '',
+      workHours: 4,
+      issues: [],
+      useWatermark: true,
+      photoSets: []
+    });
+    setPhotoSets([{ id: 'initial', before: null, after: null, type: 'two' }]);
   };
 
   const saveBlogPost = async (title: string, content: string) => {
@@ -397,6 +428,29 @@ const App: React.FC = () => {
           </main>
         )}
       </div>
+
+      {showGeneratingModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-8 h-8 text-[#FF6B35]" />
+              </div>
+              <h3 className="text-xl font-bold text-[#1A1D2E] mb-2">AI 글 생성이 시작되었습니다!</h3>
+              <p className="text-gray-500 mb-6">
+                라이브러리에서 생성 상태를 확인할 수 있습니다.<br />
+                생성이 완료되면 글을 편집하고 복사할 수 있습니다.
+              </p>
+              <button
+                onClick={handleGeneratingModalConfirm}
+                className="w-full py-3 bg-[#FF6B35] text-white rounded-xl font-bold hover:bg-[#e85a2a] transition-all"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
