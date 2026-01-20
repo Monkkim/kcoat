@@ -68,7 +68,7 @@ The app uses a dashboard layout with left sidebar navigation:
 ## External Dependencies
 
 ### Third-Party Services
-- **n8n Webhook:** External automation platform endpoint at `https://primary-production-c55d.up.railway.app/webhook-test/send-email` for AI content generation
+- **n8n Webhook:** External automation platform endpoint at `https://primary-production-c55d.up.railway.app/webhook/send-email` for AI content generation
 - **Gemini API:** API key configured via environment variable `GEMINI_API_KEY` (optional, used for AI features)
 
 ### NPM Packages
