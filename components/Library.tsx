@@ -155,7 +155,7 @@ export const Library: React.FC = () => {
                       setSelectedPost(post);
                     }
                   }}
-                  className={`p-4 cursor-pointer transition-all hover:bg-gray-50 ${
+                  className={`p-4 cursor-pointer transition-all hover:bg-gray-50 group ${
                     selectedPost?.id === post.id ? 'bg-[#FF6B35]/5 border-l-4 border-[#FF6B35]' : ''
                   }`}
                 >
@@ -163,17 +163,29 @@ export const Library: React.FC = () => {
                     <h3 className="font-bold text-[#1A1D2E] text-sm line-clamp-2 flex-1">
                       {post.title}
                     </h3>
-                    {post.status === 'generating' ? (
-                      <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-full whitespace-nowrap">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        생성중
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full whitespace-nowrap">
-                        <Check className="w-3 h-3" />
-                        완료
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {post.status === 'generating' ? (
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-full whitespace-nowrap">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          생성중
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full whitespace-nowrap">
+                          <Check className="w-3 h-3" />
+                          완료
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deletePost(post.id);
+                        }}
+                        className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-all"
+                        title="삭제"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   {post.buildingName && (
                     <p className="text-xs text-gray-500 mb-1">{post.buildingName}</p>
