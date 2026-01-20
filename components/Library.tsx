@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Calendar, Trash2, Eye, Copy, Search, RefreshCw, Loader2, Check } from 'lucide-react';
+import { FileText, Calendar, Trash2, Eye, Copy, Search, RefreshCw, Loader2, Check, Pencil, Save, X } from 'lucide-react';
 
 interface BlogPost {
   id: number;
@@ -19,7 +19,11 @@ export const Library: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showGeneratingMessage, setShowGeneratingMessage] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -89,6 +93,48 @@ export const Library: React.FC = () => {
     } catch (err) {
       await navigator.clipboard.writeText(content);
       alert('텍스트로 복사되었습니다!');
+    }
+  };
+
+  const startEditing = () => {
+    if (selectedPost) {
+      setEditContent(selectedPost.content);
+      setIsEditing(true);
+    }
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditContent('');
+  };
+
+  const saveEdit = async () => {
+    if (!selectedPost || !editorRef.current) return;
+    
+    setIsSaving(true);
+    try {
+      const newContent = editorRef.current.innerHTML;
+      const res = await fetch(`/api/blog-posts/${selectedPost.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ content: newContent })
+      });
+      
+      if (res.ok) {
+        const updatedPost = { ...selectedPost, content: newContent };
+        setSelectedPost(updatedPost);
+        setPosts(posts.map(p => p.id === selectedPost.id ? updatedPost : p));
+        setIsEditing(false);
+        alert('수정이 저장되었습니다!');
+      } else {
+        alert('저장에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('Failed to save:', err);
+      alert('저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -217,18 +263,45 @@ export const Library: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button
-                  onClick={() => copyContent(selectedPost.content)}
-                  className="px-4 py-2 bg-[#FF6B35] text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-[#FF5722] transition-all"
-                >
-                  <Copy className="w-4 h-4" /> 복사
-                </button>
-                <button
-                  onClick={() => deletePost(selectedPost.id)}
-                  className="px-4 py-2 bg-red-50 text-red-500 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-red-100 transition-all"
-                >
-                  <Trash2 className="w-4 h-4" /> 삭제
-                </button>
+                {isEditing ? (
+                  <>
+                    <button
+                      onClick={saveEdit}
+                      disabled={isSaving}
+                      className="px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-green-600 transition-all disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4" /> {isSaving ? '저장 중...' : '저장'}
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      disabled={isSaving}
+                      className="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-200 transition-all"
+                    >
+                      <X className="w-4 h-4" /> 취소
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => copyContent(selectedPost.content)}
+                      className="px-4 py-2 bg-[#FF6B35] text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-[#FF5722] transition-all"
+                    >
+                      <Copy className="w-4 h-4" /> 복사
+                    </button>
+                    <button
+                      onClick={startEditing}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-600 transition-all"
+                    >
+                      <Pencil className="w-4 h-4" /> 수정
+                    </button>
+                    <button
+                      onClick={() => deletePost(selectedPost.id)}
+                      className="px-4 py-2 bg-red-50 text-red-500 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-red-100 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" /> 삭제
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex-1 p-6 overflow-y-auto">
@@ -286,10 +359,20 @@ export const Library: React.FC = () => {
                   margin: 8px 0 !important;
                 }
               `}</style>
-              <div
-                className="library-content"
-                dangerouslySetInnerHTML={{ __html: selectedPost.content }}
-              />
+              {isEditing ? (
+                <div
+                  ref={editorRef}
+                  contentEditable
+                  className="library-content outline-none border-2 border-blue-300 rounded-xl p-4 min-h-[400px] bg-blue-50/30"
+                  dangerouslySetInnerHTML={{ __html: editContent }}
+                  suppressContentEditableWarning
+                />
+              ) : (
+                <div
+                  className="library-content"
+                  dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+                />
+              )}
             </div>
           </div>
         ) : (

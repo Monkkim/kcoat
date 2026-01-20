@@ -105,6 +105,33 @@ app.put('/api/blog-posts/:id', requireAuth, async (req, res) => {
   }
 });
 
+app.patch('/api/blog-posts/:id', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const postId = parseInt(req.params.id as string);
+    const { content } = req.body;
+    
+    const [post] = await db
+      .select()
+      .from(blogPosts)
+      .where(eq(blogPosts.id, postId))
+      .limit(1);
+    
+    if (!post || post.userId !== userId) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    await db.update(blogPosts)
+      .set({ content })
+      .where(eq(blogPosts.id, postId));
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error patching blog post:', err);
+    res.status(500).json({ error: 'Failed to patch blog post' });
+  }
+});
+
 app.delete('/api/blog-posts/:id', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
