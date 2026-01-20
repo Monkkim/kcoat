@@ -80,7 +80,8 @@ export const Library: React.FC = () => {
 
   const copyContent = async (content: string) => {
     try {
-      const blob = new Blob([content], { type: 'text/html' });
+      const centeredContent = `<div style="text-align: center;">${content}</div>`;
+      const blob = new Blob([centeredContent], { type: 'text/html' });
       await navigator.clipboard.write([
         new ClipboardItem({ 'text/html': blob })
       ]);
