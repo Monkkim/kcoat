@@ -13,6 +13,7 @@ interface Step2UploadProps {
 
 export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSets, onBack, onNext }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [uploadMode, setUploadMode] = useState<'two' | 'three'>('two');
   const [draggedPhoto, setDraggedPhoto] = useState<{ setId: string; position: 'before' | 'middle' | 'after' } | null>(null);
@@ -346,13 +347,17 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
           이전
         </button>
         <button
-          disabled={!isAnyUploaded || isProcessing}
-          onClick={onNext}
+          disabled={!isAnyUploaded || isProcessing || isSubmitting}
+          onClick={() => {
+            if (isSubmitting) return;
+            setIsSubmitting(true);
+            onNext();
+          }}
           className={`flex-[2] py-4 rounded-2xl font-bold text-white shadow-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] ${
-            isAnyUploaded && !isProcessing ? 'bg-[#FF6B35] hover:bg-[#e85a2a]' : 'bg-gray-300 cursor-not-allowed'
+            isAnyUploaded && !isProcessing && !isSubmitting ? 'bg-[#FF6B35] hover:bg-[#e85a2a]' : 'bg-gray-300 cursor-not-allowed'
           }`}
         >
-          AI 생성 시작하기 ▶
+          {isSubmitting ? '처리 중...' : 'AI 생성 시작하기 ▶'}
         </button>
       </div>
     </div>
