@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Calendar, Trash2, Eye, Copy, Search, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { FileText, Calendar, Trash2, Eye, Copy, Search, RefreshCw, Loader2, Check } from 'lucide-react';
 
 interface BlogPost {
   id: number;
@@ -8,6 +8,8 @@ interface BlogPost {
   buildingName: string | null;
   workDate: string | null;
   productType: string | null;
+  hashtags: string | null;
+  status: string;
   createdAt: string;
 }
 
@@ -16,14 +18,35 @@ export const Library: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showGeneratingMessage, setShowGeneratingMessage] = useState(false);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchPosts();
+    
+    pollingRef.current = setInterval(() => {
+      fetchPosts(false);
+    }, 5000);
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
   }, []);
 
-  const fetchPosts = async () => {
+  useEffect(() => {
+    if (selectedPost) {
+      const updated = posts.find(p => p.id === selectedPost.id);
+      if (updated && updated.status !== selectedPost.status) {
+        setSelectedPost(updated);
+      }
+    }
+  }, [posts, selectedPost]);
+
+  const fetchPosts = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await fetch('/api/blog-posts', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
@@ -32,7 +55,7 @@ export const Library: React.FC = () => {
     } catch (err) {
       console.error('Failed to fetch posts:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -123,14 +146,34 @@ export const Library: React.FC = () => {
               {filteredPosts.map(post => (
                 <li
                   key={post.id}
-                  onClick={() => setSelectedPost(post)}
+                  onClick={() => {
+                    if (post.status === 'generating') {
+                      setShowGeneratingMessage(true);
+                      setTimeout(() => setShowGeneratingMessage(false), 2000);
+                    } else {
+                      setSelectedPost(post);
+                    }
+                  }}
                   className={`p-4 cursor-pointer transition-all hover:bg-gray-50 ${
                     selectedPost?.id === post.id ? 'bg-[#FF6B35]/5 border-l-4 border-[#FF6B35]' : ''
                   }`}
                 >
-                  <h3 className="font-bold text-[#1A1D2E] text-sm line-clamp-2 mb-1">
-                    {post.title}
-                  </h3>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="font-bold text-[#1A1D2E] text-sm line-clamp-2 flex-1">
+                      {post.title}
+                    </h3>
+                    {post.status === 'generating' ? (
+                      <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-full whitespace-nowrap">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        생성중
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full whitespace-nowrap">
+                        <Check className="w-3 h-3" />
+                        완료
+                      </span>
+                    )}
+                  </div>
                   {post.buildingName && (
                     <p className="text-xs text-gray-500 mb-1">{post.buildingName}</p>
                   )}
@@ -244,6 +287,13 @@ export const Library: React.FC = () => {
           </div>
         )}
       </div>
+
+      {showGeneratingMessage && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 z-50">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="font-bold">아직 AI가 콘텐츠를 생성하고 있습니다. 잠시만 기다려주세요!</span>
+        </div>
+      )}
     </div>
   );
 };
