@@ -15,6 +15,7 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
   const [isProcessing, setIsProcessing] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [uploadMode, setUploadMode] = useState<'two' | 'three'>('two');
+  const [draggedPhoto, setDraggedPhoto] = useState<{ setId: string; position: 'before' | 'middle' | 'after' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const threePhotoInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,6 +96,59 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
     setDraggedIndex(null);
   };
 
+  const handlePhotoDragStart = (setId: string, position: 'before' | 'middle' | 'after') => {
+    setDraggedPhoto({ setId, position });
+  };
+
+  const handlePhotoDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handlePhotoDrop = (setId: string, targetPosition: 'before' | 'middle' | 'after') => {
+    if (!draggedPhoto || draggedPhoto.setId !== setId || draggedPhoto.position === targetPosition) {
+      setDraggedPhoto(null);
+      return;
+    }
+
+    setPhotoSets(prev => prev.map(set => {
+      if (set.id !== setId) return set;
+
+      const photos: { [key: string]: string | null | undefined } = {
+        before: set.before,
+        middle: set.middle,
+        after: set.after
+      };
+      const names: { [key: string]: string | undefined } = {
+        before: set.beforeName,
+        middle: set.middleName,
+        after: set.afterName
+      };
+
+      const tempPhoto = photos[draggedPhoto.position];
+      const tempName = names[draggedPhoto.position];
+      photos[draggedPhoto.position] = photos[targetPosition];
+      names[draggedPhoto.position] = names[targetPosition];
+      photos[targetPosition] = tempPhoto;
+      names[targetPosition] = tempName;
+
+      return {
+        ...set,
+        before: photos.before,
+        middle: photos.middle,
+        after: photos.after,
+        beforeName: names.before || '',
+        middleName: names.middle || '',
+        afterName: names.after || ''
+      };
+    }));
+
+    setDraggedPhoto(null);
+  };
+
+  const handlePhotoDragEnd = () => {
+    setDraggedPhoto(null);
+  };
+
   const isAnyUploaded = photoSets.some(s => s.before && s.after);
 
   return (
@@ -169,7 +223,7 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
           <div className="flex justify-between items-center px-1">
             <span className="text-sm font-bold text-[#1A1D2E]">
               생성된 세트 ({photoSets.filter(s => s.before || s.after).length})
-              <span className="text-xs text-gray-400 ml-2">드래그하여 순서 변경</span>
+              <span className="text-xs text-gray-400 ml-2">세트 순서 변경: 좌측 핸들 드래그 | 사진 위치 변경: 사진 드래그</span>
             </span>
             <button 
               onClick={clearAll}
@@ -212,10 +266,21 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
                   <div className="text-xs font-black text-gray-300 w-6 italic">#{index + 1}</div>
                   
                   <div className={`flex-1 grid gap-3 ${gridCols}`}>
-                    <div className="relative">
-                      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                    <div 
+                      className={`relative cursor-grab active:cursor-grabbing transition-all ${
+                        draggedPhoto?.setId === set.id && draggedPhoto?.position === 'before' ? 'opacity-50 scale-95' : ''
+                      }`}
+                      draggable
+                      onDragStart={(e) => { e.stopPropagation(); handlePhotoDragStart(set.id, 'before'); }}
+                      onDragOver={handlePhotoDragOver}
+                      onDrop={() => handlePhotoDrop(set.id, 'before')}
+                      onDragEnd={handlePhotoDragEnd}
+                    >
+                      <div className={`aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border-2 transition-all ${
+                        draggedPhoto?.setId === set.id && draggedPhoto?.position !== 'before' ? 'border-[#FF6B35] border-dashed' : 'border-gray-100'
+                      }`}>
                         {set.before ? (
-                          <img src={set.before} className="w-full h-full object-cover" alt="Before" />
+                          <img src={set.before} className="w-full h-full object-cover pointer-events-none" alt="Before" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-300">No Image</div>
                         )}
@@ -224,18 +289,40 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
                     </div>
 
                     {set.middle && (
-                      <div className="relative">
-                        <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
-                          <img src={set.middle} className="w-full h-full object-cover" alt="Middle" />
+                      <div 
+                        className={`relative cursor-grab active:cursor-grabbing transition-all ${
+                          draggedPhoto?.setId === set.id && draggedPhoto?.position === 'middle' ? 'opacity-50 scale-95' : ''
+                        }`}
+                        draggable
+                        onDragStart={(e) => { e.stopPropagation(); handlePhotoDragStart(set.id, 'middle'); }}
+                        onDragOver={handlePhotoDragOver}
+                        onDrop={() => handlePhotoDrop(set.id, 'middle')}
+                        onDragEnd={handlePhotoDragEnd}
+                      >
+                        <div className={`aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border-2 transition-all ${
+                          draggedPhoto?.setId === set.id && draggedPhoto?.position !== 'middle' ? 'border-[#3B82F6] border-dashed' : 'border-gray-100'
+                        }`}>
+                          <img src={set.middle} className="w-full h-full object-cover pointer-events-none" alt="Middle" />
                         </div>
                         <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-[#3B82F6] text-white text-[8px] font-bold rounded">MIDDLE</div>
                       </div>
                     )}
 
-                    <div className="relative">
-                      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                    <div 
+                      className={`relative cursor-grab active:cursor-grabbing transition-all ${
+                        draggedPhoto?.setId === set.id && draggedPhoto?.position === 'after' ? 'opacity-50 scale-95' : ''
+                      }`}
+                      draggable
+                      onDragStart={(e) => { e.stopPropagation(); handlePhotoDragStart(set.id, 'after'); }}
+                      onDragOver={handlePhotoDragOver}
+                      onDrop={() => handlePhotoDrop(set.id, 'after')}
+                      onDragEnd={handlePhotoDragEnd}
+                    >
+                      <div className={`aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border-2 transition-all ${
+                        draggedPhoto?.setId === set.id && draggedPhoto?.position !== 'after' ? 'border-[#FF6B35] border-dashed' : 'border-gray-100'
+                      }`}>
                         {set.after ? (
-                          <img src={set.after} className="w-full h-full object-cover" alt="After" />
+                          <img src={set.after} className="w-full h-full object-cover pointer-events-none" alt="After" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-300">Waiting...</div>
                         )}
