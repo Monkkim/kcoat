@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FileText, Calendar, Trash2, Eye, Copy, Search, RefreshCw, Loader2, Check, Pencil, Save, X } from 'lucide-react';
+import { ContentEditor, ContentEditorHandle } from './ContentEditor';
 
 interface BlogPost {
   id: number;
@@ -22,8 +23,9 @@ export const Library: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [editKey, setEditKey] = useState(0);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  const editorRef = useRef<HTMLDivElement>(null);
+  const contentEditorRef = useRef<ContentEditorHandle>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -100,22 +102,21 @@ export const Library: React.FC = () => {
 
   const startEditing = () => {
     if (selectedPost) {
-      setEditContent(selectedPost.content);
+      setEditKey(prev => prev + 1);
       setIsEditing(true);
     }
   };
 
   const cancelEditing = () => {
     setIsEditing(false);
-    setEditContent('');
   };
 
   const saveEdit = async () => {
-    if (!selectedPost) return;
+    if (!selectedPost || !contentEditorRef.current) return;
     
     setIsSaving(true);
     try {
-      const newContent = editContent;
+      const newContent = contentEditorRef.current.getContent();
       const res = await fetch(`/api/blog-posts/${selectedPost.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -362,11 +363,10 @@ export const Library: React.FC = () => {
                 }
               `}</style>
               {isEditing ? (
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full h-full min-h-[500px] p-4 border-2 border-blue-300 rounded-xl bg-blue-50/30 text-black font-mono text-sm resize-none outline-none focus:border-blue-500"
-                  placeholder="HTML 콘텐츠를 수정하세요..."
+                <ContentEditor
+                  key={editKey}
+                  ref={contentEditorRef}
+                  initialContent={selectedPost.content}
                 />
               ) : (
                 <div
