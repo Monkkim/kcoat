@@ -224,6 +224,7 @@ export const Library: React.FC = () => {
                   color: #000000 !important;
                   font-size: 16px;
                   line-height: 1.6;
+                  text-align: center;
                 }
                 .library-content * {
                   color: #000000 !important;
