@@ -29,7 +29,9 @@ export const Library: React.FC = () => {
     fetchPosts();
     
     pollingRef.current = setInterval(() => {
-      fetchPosts(false);
+      if (!isEditing) {
+        fetchPosts(false);
+      }
     }, 5000);
 
     return () => {
@@ -37,16 +39,16 @@ export const Library: React.FC = () => {
         clearInterval(pollingRef.current);
       }
     };
-  }, []);
+  }, [isEditing]);
 
   useEffect(() => {
-    if (selectedPost) {
+    if (selectedPost && !isEditing) {
       const updated = posts.find(p => p.id === selectedPost.id);
       if (updated && updated.status !== selectedPost.status) {
         setSelectedPost(updated);
       }
     }
-  }, [posts, selectedPost]);
+  }, [posts, selectedPost, isEditing]);
 
   const fetchPosts = async (showLoading = true) => {
     try {
@@ -98,8 +100,12 @@ export const Library: React.FC = () => {
 
   const startEditing = () => {
     if (selectedPost) {
-      setEditContent(selectedPost.content);
       setIsEditing(true);
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.innerHTML = selectedPost.content;
+        }
+      }, 0);
     }
   };
 
@@ -364,7 +370,6 @@ export const Library: React.FC = () => {
                   ref={editorRef}
                   contentEditable
                   className="library-content outline-none border-2 border-blue-300 rounded-xl p-4 min-h-[400px] bg-blue-50/30"
-                  dangerouslySetInnerHTML={{ __html: editContent }}
                   suppressContentEditableWarning
                 />
               ) : (
