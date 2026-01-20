@@ -47,18 +47,19 @@ app.get('/api/blog-posts', requireAuth, async (req, res) => {
 app.post('/api/blog-posts', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    const { title, content, buildingName, workDate, productType, photoSets } = req.body;
+    const { title, content, buildingName, workDate, productType, photoSets, status } = req.body;
     
     const [newPost] = await db
       .insert(blogPosts)
       .values({
         userId,
         title,
-        content,
+        content: content || '',
         buildingName,
         workDate,
         productType,
-        photoSets
+        photoSets,
+        status: status || 'completed'
       })
       .returning();
     
@@ -66,6 +67,41 @@ app.post('/api/blog-posts', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Error creating blog post:', err);
     res.status(500).json({ error: 'Failed to create blog post' });
+  }
+});
+
+app.put('/api/blog-posts/:id', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const postId = parseInt(req.params.id as string);
+    const { title, content, hashtags, status } = req.body;
+    
+    const [post] = await db
+      .select()
+      .from(blogPosts)
+      .where(eq(blogPosts.id, postId))
+      .limit(1);
+    
+    if (!post || post.userId !== userId) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    const updateData: any = { updatedAt: new Date() };
+    if (title !== undefined) updateData.title = title;
+    if (content !== undefined) updateData.content = content;
+    if (hashtags !== undefined) updateData.hashtags = hashtags;
+    if (status !== undefined) updateData.status = status;
+    
+    const [updatedPost] = await db
+      .update(blogPosts)
+      .set(updateData)
+      .where(eq(blogPosts.id, postId))
+      .returning();
+    
+    res.json(updatedPost);
+  } catch (err) {
+    console.error('Error updating blog post:', err);
+    res.status(500).json({ error: 'Failed to update blog post' });
   }
 });
 
