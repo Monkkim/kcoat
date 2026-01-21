@@ -6,10 +6,9 @@ interface StepIndicatorProps {
 }
 
 const steps = [
-  { id: 1, name: '현장 정보' },
-  { id: 2, name: '사진 업로드' },
-  { id: 3, name: 'AI 생성' },
-  { id: 4, name: '검토' }
+  { id: 1, name: '현장정보' },
+  { id: 2, name: '사진업로드' },
+  { id: 3, name: '완료' }
 ];
 
 export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
