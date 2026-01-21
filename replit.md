@@ -39,14 +39,13 @@ Preferred communication style: Simple, everyday language.
 ### Application Flow
 The app uses a dashboard layout with left sidebar navigation:
 - **Sidebar Menu:**
-  - 블로그 생성하기 (Create Blog): 4-step wizard for blog creation
+  - 블로그 생성하기 (Create Blog): 3-step wizard for blog creation
   - 라이브러리 (Library): View and manage saved blog posts
 
-**Blog Creation (4-step wizard):**
-1. **Step 1 (Form):** Collect construction site metadata (building name, date, product type, issues)
-2. **Step 2 (Upload):** Bulk upload photo sets (2-photo Before/After or 3-photo Before/Middle/After) with drag-and-drop reordering
-3. **Step 3 (Workspace):** AI content generation with real-time progress, drag-and-drop block editor for content arrangement
-4. **Save & Library:** Click "작업 완료 및 저장" button saves post to database and navigates to Library
+**Blog Creation (3-step wizard):**
+1. **Step 1 (현장정보):** Collect construction site metadata (building name, date, product type, issues)
+2. **Step 2 (사진업로드):** Bulk upload photo sets (2-photo Before/After or 3-photo Before/Middle/After) with drag-and-drop reordering
+3. **Step 3 (완료):** Completion page with AI generation status message and navigation options (go to library or create new post)
 
 **Library Features:**
 - View all saved blog posts with title, building name, work date
