@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { StepIndicator } from './components/StepIndicator';
 import { Step1Form } from './components/Step1Form';
 import { Step2Upload } from './components/Step2Upload';
-import { Step3Workspace } from './components/Step3Workspace';
-import { Step4Success } from './components/Step4Success';
+import { Step3Completion } from './components/Step3Completion';
 import { AuthPage } from './components/AuthPage';
 import { Sidebar } from './components/Sidebar';
 import { Library } from './components/Library';
 import { KCoatFormData, PhotoSet, N8NResponse } from './types';
 import { formatDate } from './utils';
 import { WEBHOOK_URL, PRODUCT_OPTIONS } from './constants';
-import { Sparkles, Crown, LogOut, User } from 'lucide-react';
+import { Crown, LogOut, User } from 'lucide-react';
 
 interface AuthUser {
   id: number;
@@ -23,8 +22,6 @@ const App: React.FC = () => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState<'create' | 'library'>('create');
   const [step, setStep] = useState(1);
-  const [generatedTitle, setGeneratedTitle] = useState('');
-  const [generatedContent, setGeneratedContent] = useState('');
   const [formData, setFormData] = useState<KCoatFormData>({
     buildingName: '',
     workDate: formatDate(new Date()),
@@ -43,8 +40,6 @@ const App: React.FC = () => {
   ]);
 
   const [apiResult, setApiResult] = useState<N8NResponse | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showGeneratingModal, setShowGeneratingModal] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -133,7 +128,7 @@ const App: React.FC = () => {
       const newPost = await createRes.json();
       console.log('📝 생성중 상태로 블로그 포스트 생성됨:', newPost.id);
 
-      setShowGeneratingModal(true);
+      setStep(3);
 
       const finalPayload = {
         buildingName: formData.buildingName,
@@ -278,8 +273,16 @@ const App: React.FC = () => {
     }
   };
 
-  const handleGeneratingModalConfirm = () => {
-    setShowGeneratingModal(false);
+  const handleGoToLibrary = () => {
+    setActiveMenu('library');
+    resetForm();
+  };
+
+  const handleCreateNew = () => {
+    resetForm();
+  };
+
+  const resetForm = () => {
     setStep(1);
     setApiResult(null);
     setFormData({
@@ -406,51 +409,15 @@ const App: React.FC = () => {
               )}
 
               {step === 3 && (
-                <Step3Workspace 
-                  isGenerating={isGenerating}
-                  result={apiResult}
-                  photoSets={photoSets}
-                  onBack={() => setStep(2)}
-                  onComplete={saveBlogPost}
-                  title={generatedTitle}
-                />
-              )}
-
-              {step === 4 && (
-                <Step4Success 
-                  onReset={() => {
-                    setStep(1);
-                    setApiResult(null);
-                  }}
+                <Step3Completion 
+                  onGoToLibrary={handleGoToLibrary}
+                  onCreateNew={handleCreateNew}
                 />
               )}
             </div>
           </main>
         )}
       </div>
-
-      {showGeneratingModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-8 max-w-md mx-4 shadow-2xl animate-in fade-in zoom-in duration-300">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-[#FF6B35]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#1A1D2E] mb-2">AI 글 생성이 시작되었습니다!</h3>
-              <p className="text-gray-500 mb-6">
-                라이브러리에서 생성 상태를 확인할 수 있습니다.<br />
-                생성이 완료되면 글을 편집하고 복사할 수 있습니다.
-              </p>
-              <button
-                onClick={handleGeneratingModalConfirm}
-                className="w-full py-3 bg-[#FF6B35] text-white rounded-xl font-bold hover:bg-[#e85a2a] transition-all"
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
