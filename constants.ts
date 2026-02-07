@@ -20,48 +20,48 @@ export interface ProductCategory {
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
   {
     label: '주거',
-    value: 'residential',
+    value: '주거',
     subcategories: [
       {
         label: '탄성코트',
-        value: 'elastic_coat',
+        value: '탄성코트',
         products: ['탄성코트', '바이오세라믹', '월드클래스', '제로스탑', '수성 페인트']
       },
       {
         label: '내부도장',
-        value: 'interior_paint',
+        value: '내부도장',
         products: ['현관문/방화문', '난간', '방수 페인트', '유성 페인트']
       },
       {
         label: '복도&계단',
-        value: 'hallway_stairs',
+        value: '복도&계단',
         products: ['탄성코트', '무늬코트', '수성 페인트']
       }
     ]
   },
   {
     label: '상업',
-    value: 'commercial',
+    value: '상업',
     subcategories: [
       {
         label: '내부도장',
-        value: 'commercial_interior',
+        value: '내부도장',
         products: ['수성 페인트', '유성 페인트', '우드 스테인', '우드 바디쉬', '스타코']
       },
       {
         label: '외부도장',
-        value: 'commercial_exterior',
+        value: '외부도장',
         products: ['수성 페인트', '유성 페인트', '스타코', '우드 스테인', '우드 바니쉬', '방수 페인트']
       }
     ]
   },
   {
     label: '바닥',
-    value: 'floor',
+    value: '바닥',
     subcategories: [
       {
         label: '',
-        value: 'floor_direct',
+        value: '',
         products: ['에폭시', '마블 에폭시', '솔리드 에폭시', '빈티지 에폭시', '수평몰탈']
       }
     ]
