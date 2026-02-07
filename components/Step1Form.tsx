@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { PRODUCT_CATEGORIES, ISSUE_TAGS } from '../constants';
 import { WorkType } from '../types';
-import { Calendar, Building, MapPin, Package, Palette, Tag, Plus, X, ChevronRight } from 'lucide-react';
+import { Calendar, Building, MapPin, Package, Palette, Tag, Plus, X, ChevronRight, Pencil } from 'lucide-react';
 
 interface Step1FormProps {
   data: any;
@@ -12,6 +12,8 @@ interface Step1FormProps {
 
 export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }) => {
   const [customTag, setCustomTag] = useState('');
+  const [customProductMode, setCustomProductMode] = useState(false);
+  const [customProductInput, setCustomProductInput] = useState('');
   const isFormValid = data.buildingName && data.workDate && data.detailedLocation && data.productType && data.productColor;
 
   const handleAddCustomTag = (e: React.KeyboardEvent | React.MouseEvent) => {
@@ -35,6 +37,8 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
     : (selectedSubcategory?.products || []);
 
   const handleCategoryChange = (value: string) => {
+    setCustomProductMode(false);
+    setCustomProductInput('');
     updateData({
       productCategory: value,
       productSubcategory: '',
@@ -43,6 +47,8 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
   };
 
   const handleSubcategoryChange = (value: string) => {
+    setCustomProductMode(false);
+    setCustomProductInput('');
     updateData({
       productSubcategory: value,
       productType: ''
@@ -178,9 +184,9 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
                 {products.map(product => (
                   <button
                     key={product}
-                    onClick={() => updateData({ productType: product })}
+                    onClick={() => { setCustomProductMode(false); updateData({ productType: product }); }}
                     className={`py-2 px-4 text-sm font-medium rounded-full border transition-all ${
-                      data.productType === product
+                      data.productType === product && !customProductMode
                         ? 'bg-[#FF6B35]/10 text-[#FF6B35] border-[#FF6B35] font-bold'
                         : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B35]/50'
                     }`}
@@ -188,6 +194,33 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
                     {product}
                   </button>
                 ))}
+                <button
+                  onClick={() => { setCustomProductMode(true); updateData({ productType: '' }); }}
+                  className={`py-2 px-4 text-sm font-medium rounded-full border transition-all flex items-center gap-1.5 ${
+                    customProductMode
+                      ? 'bg-[#FF6B35]/10 text-[#FF6B35] border-[#FF6B35] font-bold'
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B35]/50'
+                  }`}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  직접 입력
+                </button>
+              </div>
+            )}
+
+            {customProductMode && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 rounded-xl border border-[#FF6B35] bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 transition-all"
+                  placeholder="제품명을 직접 입력해주세요"
+                  value={customProductInput}
+                  onChange={(e) => {
+                    setCustomProductInput(e.target.value);
+                    updateData({ productType: e.target.value });
+                  }}
+                  autoFocus
+                />
               </div>
             )}
 
