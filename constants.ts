@@ -60,8 +60,8 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
     value: '바닥',
     subcategories: [
       {
-        label: '',
-        value: '',
+        label: '바닥',
+        value: '바닥',
         products: ['에폭시', '마블 에폭시', '솔리드 에폭시', '빈티지 에폭시', '수평몰탈']
       }
     ]

@@ -27,7 +27,7 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
   };
 
   const selectedCategory = PRODUCT_CATEGORIES.find(c => c.value === data.productCategory);
-  const isFloor = data.productCategory === 'floor';
+  const isFloor = data.productCategory === '바닥';
   const subcategories = selectedCategory?.subcategories || [];
   const selectedSubcategory = subcategories.find(s => s.value === data.productSubcategory);
   const products = isFloor
