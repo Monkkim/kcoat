@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, User, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 
 interface AuthPageProps {
-  onLoginSuccess: (user: { id: number; name: string; email: string }) => void;
+  onLoginSuccess: (user: { id: number; name: string; email: string; role: string; approved: boolean }) => void;
 }
 
 type AuthMode = 'login' | 'register' | 'forgot-password';
@@ -51,6 +51,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || '회원가입에 실패했습니다');
+        if (data.needsApproval) {
+          setSuccessMessage(data.message || '관리자 승인을 기다려주세요');
+          setMode('login');
+          return;
+        }
         onLoginSuccess(data);
         
       } else if (mode === 'login') {

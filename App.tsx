@@ -6,6 +6,7 @@ import { Step3Completion } from './components/Step3Completion';
 import { AuthPage } from './components/AuthPage';
 import { Sidebar } from './components/Sidebar';
 import { Library } from './components/Library';
+import { AdminPage } from './components/AdminPage';
 import { KCoatFormData, PhotoSet, N8NResponse } from './types';
 import { formatDate } from './utils';
 import { WEBHOOK_URL } from './constants';
@@ -15,12 +16,14 @@ interface AuthUser {
   id: number;
   name: string;
   email: string;
+  role: string;
+  approved: boolean;
 }
 
 const App: React.FC = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [activeMenu, setActiveMenu] = useState<'create' | 'library'>('create');
+  const [activeMenu, setActiveMenu] = useState<'create' | 'library' | 'admin'>('create');
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<KCoatFormData>({
     buildingName: '',
@@ -363,7 +366,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-[#FAF9F6]">
-      <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} />
+      <Sidebar activeMenu={activeMenu} onMenuChange={setActiveMenu} isAdmin={user?.role === 'admin'} />
       
       <div className="flex-1 flex flex-col">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 shadow-sm">
@@ -388,7 +391,9 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {activeMenu === 'library' ? (
+        {activeMenu === 'admin' ? (
+          <AdminPage />
+        ) : activeMenu === 'library' ? (
           <Library />
         ) : (
           <main className={`${step >= 3 ? 'max-w-7xl' : 'max-w-3xl'} mx-auto px-6 pt-10 pb-20 transition-all duration-700 w-full`}>

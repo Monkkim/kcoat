@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, timestamp, text, integer, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, text, integer, jsonb, boolean } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -9,6 +9,8 @@ export const users = pgTable('users', {
   password: varchar('password', { length: 255 }).notNull(),
   resetToken: varchar('reset_token', { length: 255 }),
   resetTokenExpiry: timestamp('reset_token_expiry'),
+  role: varchar('role', { length: 20 }).notNull().default('user'),
+  approved: boolean('approved').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -57,3 +59,11 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts, {
 
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type SelectBlogPost = typeof blogPosts.$inferSelect;
+
+export const activityLogs = pgTable('activity_logs', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id),
+  action: varchar('action', { length: 50 }).notNull(),
+  details: text('details'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

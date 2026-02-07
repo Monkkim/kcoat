@@ -4,8 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { setupAuth } from './auth.js';
 import { db } from './db/index.js';
-import { blogPosts } from './db/schema.js';
-import { eq, desc } from 'drizzle-orm';
+import { users, blogPosts, activityLogs } from './db/schema.js';
+import { eq, desc, sql } from 'drizzle-orm';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +26,12 @@ function requireAuth(req: express.Request, res: express.Response, next: express.
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
+  next();
+}
+
+function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
+  if ((req.user as any).role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
   next();
 }
 
@@ -62,6 +68,12 @@ app.post('/api/blog-posts', requireAuth, async (req, res) => {
         status: status || 'completed'
       })
       .returning();
+
+    await db.insert(activityLogs).values({
+      userId,
+      action: 'blog_create',
+      details: `블로그 생성: ${title}`,
+    });
     
     res.status(201).json(newPost);
   } catch (err) {
@@ -152,6 +164,116 @@ app.delete('/api/blog-posts/:id', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Error deleting blog post:', err);
     res.status(500).json({ error: 'Failed to delete blog post' });
+  }
+});
+
+app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  try {
+    const allUsers = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        approved: users.approved,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .orderBy(desc(users.createdAt));
+    res.json(allUsers);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id as string);
+    await db.update(users).set({ approved: true }).where(eq(users.id, userId));
+    await db.insert(activityLogs).values({
+      userId: req.user!.id,
+      action: 'user_approve',
+      details: `회원 승인: ID ${userId}`,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error approving user:', err);
+    res.status(500).json({ error: 'Failed to approve user' });
+  }
+});
+
+app.post('/api/admin/users/:id/reject', requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id as string);
+    await db.insert(activityLogs).values({
+      userId: req.user!.id,
+      action: 'user_reject',
+      details: `회원 거절: ID ${userId}`,
+    });
+    await db.delete(users).where(eq(users.id, userId));
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error rejecting user:', err);
+    res.status(500).json({ error: 'Failed to reject user' });
+  }
+});
+
+app.post('/api/admin/users/:id/set-admin', requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id as string);
+    await db.update(users).set({ role: 'admin' }).where(eq(users.id, userId));
+    await db.insert(activityLogs).values({
+      userId: req.user!.id,
+      action: 'set_admin',
+      details: `관리자 지정: ID ${userId}`,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error setting admin:', err);
+    res.status(500).json({ error: 'Failed to set admin' });
+  }
+});
+
+app.post('/api/admin/users/:id/remove-admin', requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id as string);
+    if (userId === req.user!.id) {
+      return res.status(400).json({ error: '자신의 관리자 권한은 해제할 수 없습니다' });
+    }
+    await db.update(users).set({ role: 'user' }).where(eq(users.id, userId));
+    await db.insert(activityLogs).values({
+      userId: req.user!.id,
+      action: 'remove_admin',
+      details: `관리자 해제: ID ${userId}`,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error removing admin:', err);
+    res.status(500).json({ error: 'Failed to remove admin' });
+  }
+});
+
+app.get('/api/admin/activity-logs', requireAdmin, async (req, res) => {
+  try {
+    const logs = await db
+      .select({
+        id: activityLogs.id,
+        userId: activityLogs.userId,
+        action: activityLogs.action,
+        details: activityLogs.details,
+        createdAt: activityLogs.createdAt,
+        userName: users.name,
+        userEmail: users.email,
+      })
+      .from(activityLogs)
+      .leftJoin(users, eq(activityLogs.userId, users.id))
+      .orderBy(desc(activityLogs.createdAt))
+      .limit(100);
+    res.json(logs);
+  } catch (err) {
+    console.error('Error fetching activity logs:', err);
+    res.status(500).json({ error: 'Failed to fetch activity logs' });
   }
 });
 

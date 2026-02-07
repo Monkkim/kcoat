@@ -30,17 +30,20 @@ Preferred communication style: Simple, everyday language.
 - **Rich Text Editor:** contentEditable-based with image resize handles
 
 ### Authentication System
-- **Login:** Email/password authentication
-- **Registration:** Name, email, password with validation
+- **Login:** Email/password authentication with approval check
+- **Registration:** Name, email, password with validation; requires admin approval (first user is auto-admin)
+- **Admin Approval:** New users must be approved by admin before login; unapproved users see a "waiting for approval" message
 - **Password Reset:** Email-based token system (nodemailer integration ready)
 - **Session Management:** Secure cookies with PostgreSQL session store
 - **Required Secret:** SESSION_SECRET environment variable
+- **User Roles:** 'admin' and 'user' roles; admins can manage users and view activity logs
 
 ### Application Flow
 The app uses a dashboard layout with left sidebar navigation:
 - **Sidebar Menu:**
   - 블로그 생성하기 (Create Blog): 3-step wizard for blog creation
   - 라이브러리 (Library): View and manage saved blog posts
+  - 관리자 (Admin): Admin panel for user management and activity logs (visible to admins only)
 
 **Blog Creation (3-step wizard):**
 1. **Step 1 (현장정보):** Collect construction site metadata (building name, date, product type, issues)

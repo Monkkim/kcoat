@@ -1,12 +1,13 @@
 import React from 'react';
-import { PenSquare, Library, Sparkles } from 'lucide-react';
+import { PenSquare, Library, Sparkles, Shield } from 'lucide-react';
 
 interface SidebarProps {
-  activeMenu: 'create' | 'library';
-  onMenuChange: (menu: 'create' | 'library') => void;
+  activeMenu: 'create' | 'library' | 'admin';
+  onMenuChange: (menu: 'create' | 'library' | 'admin') => void;
+  isAdmin?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeMenu, onMenuChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeMenu, onMenuChange, isAdmin }) => {
   return (
     <div className="w-64 bg-[#1A1D2E] min-h-screen flex flex-col">
       <div className="p-6 border-b border-white/10">
@@ -49,6 +50,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeMenu, onMenuChange }) =>
               <span className="font-bold">라이브러리</span>
             </button>
           </li>
+          {isAdmin && (
+            <li>
+              <button
+                onClick={() => onMenuChange('admin')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  activeMenu === 'admin'
+                    ? 'bg-[#FF6B35] text-white'
+                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <Shield className="w-5 h-5" />
+                <span className="font-bold">관리자</span>
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
 

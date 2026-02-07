@@ -6,9 +6,9 @@ import connectPg from 'connect-pg-simple';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import { users, insertUserSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, type SelectUser } from './db/schema.js';
+import { users, activityLogs, insertUserSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, type SelectUser } from './db/schema.js';
 import { db, pool } from './db/index.js';
-import { eq } from 'drizzle-orm';
+import { eq, count } from 'drizzle-orm';
 
 declare global {
   namespace Express {
@@ -108,12 +108,30 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: '이미 등록된 이메일입니다' });
       }
 
+      const [userCount] = await db.select({ value: count() }).from(users);
+      const isFirstUser = userCount.value === 0;
+
       const hashedPassword = await hashPassword(result.data.password);
       const [user] = await db.insert(users).values({
         name: result.data.name,
         email: result.data.email,
         password: hashedPassword,
+        role: isFirstUser ? 'admin' : 'user',
+        approved: isFirstUser ? true : false,
       }).returning();
+
+      await db.insert(activityLogs).values({
+        userId: user.id,
+        action: 'register',
+        details: `회원가입: ${user.name} (${user.email})`,
+      });
+
+      if (!user.approved) {
+        return res.status(201).json({ 
+          needsApproval: true, 
+          message: '관리자 승인을 기다려주세요' 
+        });
+      }
 
       req.login(user, (err) => {
         if (err) {
@@ -122,7 +140,9 @@ export function setupAuth(app: Express) {
         res.status(201).json({ 
           id: user.id, 
           name: user.name, 
-          email: user.email 
+          email: user.email,
+          role: user.role,
+          approved: user.approved
         });
       });
     } catch (err) {
@@ -144,14 +164,24 @@ export function setupAuth(app: Express) {
       if (!user) {
         return res.status(401).json({ error: info?.message || '이메일 또는 비밀번호가 올바르지 않습니다' });
       }
-      req.login(user, (err) => {
+      if (!user.approved) {
+        return res.status(403).json({ error: '관리자 승인을 기다려주세요. 승인 후 로그인이 가능합니다.' });
+      }
+      req.login(user, async (err) => {
         if (err) {
           return res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다' });
         }
+        await db.insert(activityLogs).values({
+          userId: user.id,
+          action: 'login',
+          details: `로그인: ${user.name}`,
+        });
         res.json({ 
           id: user.id, 
           name: user.name, 
-          email: user.email 
+          email: user.email,
+          role: user.role,
+          approved: user.approved
         });
       });
     })(req, res, next);
@@ -174,7 +204,9 @@ export function setupAuth(app: Express) {
     res.json({ 
       id: user.id, 
       name: user.name, 
-      email: user.email 
+      email: user.email,
+      role: user.role,
+      approved: user.approved
     });
   });
 
