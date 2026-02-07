@@ -110,14 +110,15 @@ export function setupAuth(app: Express) {
 
       const [userCount] = await db.select({ value: count() }).from(users);
       const isFirstUser = userCount.value === 0;
+      const isDefaultAdmin = result.data.email === 'snu08041@naver.com';
 
       const hashedPassword = await hashPassword(result.data.password);
       const [user] = await db.insert(users).values({
         name: result.data.name,
         email: result.data.email,
         password: hashedPassword,
-        role: isFirstUser ? 'admin' : 'user',
-        approved: isFirstUser ? true : false,
+        role: (isFirstUser || isDefaultAdmin) ? 'admin' : 'user',
+        approved: (isFirstUser || isDefaultAdmin) ? true : false,
       }).returning();
 
       await db.insert(activityLogs).values({
