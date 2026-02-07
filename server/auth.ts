@@ -167,8 +167,13 @@ export function setupAuth(app: Express) {
       }
       const isDefaultAdmin = user.email === 'snu08041@naver.com';
       if (isDefaultAdmin && (!user.approved || user.role !== 'admin')) {
-        await db.update(users).set({ role: 'admin', approved: true }).where(eq(users.id, user.id));
-        user = { ...user, role: 'admin', approved: true };
+        try {
+          const [updated] = await db.update(users).set({ role: 'admin', approved: true }).where(eq(users.id, user.id)).returning();
+          if (updated) user = updated;
+        } catch (e) {
+          console.error('Failed to auto-promote default admin:', e);
+          return res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다' });
+        }
       }
       if (!user.approved) {
         return res.status(403).json({ error: '관리자 승인을 기다려주세요. 승인 후 로그인이 가능합니다.' });
