@@ -158,12 +158,17 @@ export function setupAuth(app: Express) {
       return res.status(400).json({ error: result.error.issues[0]?.message || '입력값이 올바르지 않습니다' });
     }
 
-    passport.authenticate('local', (err: any, user: SelectUser | false, info: { message: string }) => {
+    passport.authenticate('local', async (err: any, user: SelectUser | false, info: { message: string }) => {
       if (err) {
         return res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다' });
       }
       if (!user) {
         return res.status(401).json({ error: info?.message || '이메일 또는 비밀번호가 올바르지 않습니다' });
+      }
+      const isDefaultAdmin = user.email === 'snu08041@naver.com';
+      if (isDefaultAdmin && (!user.approved || user.role !== 'admin')) {
+        await db.update(users).set({ role: 'admin', approved: true }).where(eq(users.id, user.id));
+        user = { ...user, role: 'admin', approved: true };
       }
       if (!user.approved) {
         return res.status(403).json({ error: '관리자 승인을 기다려주세요. 승인 후 로그인이 가능합니다.' });
