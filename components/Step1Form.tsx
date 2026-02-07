@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { PRODUCT_CATEGORIES, ISSUE_TAGS } from '../constants';
 import { WorkType } from '../types';
-import { Calendar, Building, MapPin, Package, Palette, Clock, Tag, Plus, X, ChevronRight } from 'lucide-react';
+import { Calendar, Building, MapPin, Package, Palette, Tag, Plus, X, ChevronRight } from 'lucide-react';
 
 interface Step1FormProps {
   data: any;
@@ -222,23 +222,6 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
             />
           </div>
 
-          <div>
-            <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
-              <Clock className="w-4 h-4 mr-2 text-[#FF6B35]" />
-              작업 시간
-            </label>
-            <div className="flex items-center">
-              <input 
-                type="number"
-                min="0.5"
-                step="0.5"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all"
-                value={data.workHours}
-                onChange={(e) => updateData({ workHours: parseFloat(e.target.value) })}
-              />
-              <span className="ml-3 text-sm font-medium text-gray-500">시간</span>
-            </div>
-          </div>
         </div>
 
         <div>

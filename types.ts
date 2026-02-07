@@ -21,7 +21,6 @@ export interface KCoatFormData {
   productSubcategory: string;
   productType: string;
   productColor: string;
-  workHours: number;
   issues: string[];
   useWatermark: boolean;
   photoSets: { before: string; middle?: string | null; after: string; type: 'two' | 'three' }[];

@@ -31,7 +31,6 @@ const App: React.FC = () => {
     productSubcategory: '',
     productType: '',
     productColor: '',
-    workHours: 4,
     issues: [],
     useWatermark: true,
     photoSets: []
@@ -141,7 +140,6 @@ const App: React.FC = () => {
         productSubcategory: formData.productSubcategory,
         productType: formData.productType,
         productColor: formData.productColor,
-        workHours: formData.workHours,
         issues: formData.issues,
         photoSets: processedSets
       };
@@ -298,7 +296,6 @@ const App: React.FC = () => {
       productSubcategory: '',
       productType: '',
       productColor: '',
-      workHours: 4,
       issues: [],
       useWatermark: true,
       photoSets: []
@@ -338,7 +335,6 @@ const App: React.FC = () => {
         productSubcategory: '',
         productType: '',
         productColor: '',
-        workHours: 4,
         issues: [],
         useWatermark: true,
         photoSets: []
