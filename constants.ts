@@ -7,30 +7,75 @@ export const COLORS = {
   success: '#00B894',
 };
 
-export const PRODUCT_OPTIONS = [
-  { 
-    value: "basic_bioceramic", 
-    label: "기본형 바이오세라믹",
-    description: "결로 방지 및 항곰팡이 기본 성능"
+export interface ProductCategory {
+  label: string;
+  value: string;
+  subcategories: {
+    label: string;
+    value: string;
+    products: string[];
+  }[];
+}
+
+export const PRODUCT_CATEGORIES: ProductCategory[] = [
+  {
+    label: '주거',
+    value: 'residential',
+    subcategories: [
+      {
+        label: '탄성코트',
+        value: 'elastic_coat',
+        products: ['탄성코트', '바이오세라믹', '월드클래스', '제로스탑', '수성 페인트']
+      },
+      {
+        label: '내부도장',
+        value: 'interior_paint',
+        products: ['현관문/방화문', '난간', '방수 페인트', '유성 페인트']
+      },
+      {
+        label: '복도&계단',
+        value: 'hallway_stairs',
+        products: ['탄성코트', '무늬코트', '수성 페인트']
+      }
+    ]
   },
-  { 
-    value: "world_class", 
-    label: "고급형 월드클래스",
-    description: "내곰팡이성, 중금속 불검출 인증"
+  {
+    label: '상업',
+    value: 'commercial',
+    subcategories: [
+      {
+        label: '내부도장',
+        value: 'commercial_interior',
+        products: ['수성 페인트', '유성 페인트', '우드 스테인', '우드 바디쉬', '스타코']
+      },
+      {
+        label: '외부도장',
+        value: 'commercial_exterior',
+        products: ['수성 페인트', '유성 페인트', '스타코', '우드 스테인', '우드 바니쉬', '방수 페인트']
+      }
+    ]
   },
-  { 
-    value: "premium_zerostop", 
-    label: "프리미엄 제로스탑",
-    description: "내곰팡이성, 결로 예방 성능 인증"
-  },
-  { 
-    value: "general_elastic", 
-    label: "일반탄성",
-    description: "가성비 도장 시공"
+  {
+    label: '바닥',
+    value: 'floor',
+    subcategories: [
+      {
+        label: '',
+        value: 'floor_direct',
+        products: ['에폭시', '마블 에폭시', '솔리드 에폭시', '빈티지 에폭시', '수평몰탈']
+      }
+    ]
   }
 ];
 
-export const COLOR_OPTIONS = [];
+export const PRODUCT_OPTIONS = [
+  { value: "basic_bioceramic", label: "기본형 바이오세라믹", description: "" },
+  { value: "world_class", label: "고급형 월드클래스", description: "" },
+  { value: "premium_zerostop", label: "프리미엄 제로스탑", description: "" },
+  { value: "general_elastic", label: "일반탄성", description: "" }
+];
+
+export const COLOR_OPTIONS: string[] = [];
 
 export const ISSUE_TAGS = [
   "#곰팡이발생",

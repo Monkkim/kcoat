@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { PRODUCT_OPTIONS, ISSUE_TAGS } from '../constants';
+import { PRODUCT_CATEGORIES, ISSUE_TAGS } from '../constants';
 import { WorkType } from '../types';
-import { Calendar, Building, MapPin, Package, Palette, Clock, Tag, Plus, X } from 'lucide-react';
+import { Calendar, Building, MapPin, Package, Palette, Clock, Tag, Plus, X, ChevronRight } from 'lucide-react';
 
 interface Step1FormProps {
   data: any;
@@ -26,6 +26,29 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
     }
   };
 
+  const selectedCategory = PRODUCT_CATEGORIES.find(c => c.value === data.productCategory);
+  const isFloor = data.productCategory === 'floor';
+  const subcategories = selectedCategory?.subcategories || [];
+  const selectedSubcategory = subcategories.find(s => s.value === data.productSubcategory);
+  const products = isFloor
+    ? (subcategories[0]?.products || [])
+    : (selectedSubcategory?.products || []);
+
+  const handleCategoryChange = (value: string) => {
+    updateData({
+      productCategory: value,
+      productSubcategory: '',
+      productType: ''
+    });
+  };
+
+  const handleSubcategoryChange = (value: string) => {
+    updateData({
+      productSubcategory: value,
+      productType: ''
+    });
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center mb-8">
@@ -34,7 +57,6 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-        {/* Building Name */}
         <div>
           <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
             <Building className="w-4 h-4 mr-2 text-[#FF6B35]" />
@@ -50,7 +72,6 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Work Date */}
           <div>
             <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
               <Calendar className="w-4 h-4 mr-2 text-[#FF6B35]" />
@@ -75,7 +96,6 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
             </div>
           </div>
 
-          {/* Work Type */}
           <div>
             <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
               시공 분류 <span className="text-red-500 ml-1">*</span>
@@ -98,7 +118,6 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
           </div>
         </div>
 
-        {/* Detailed Location */}
         <div>
           <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
             <MapPin className="w-4 h-4 mr-2 text-[#FF6B35]" />
@@ -113,33 +132,82 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
           />
         </div>
 
-        {/* Product Type */}
         <div>
           <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
             <Package className="w-4 h-4 mr-2 text-[#FF6B35]" />
             시공 제품 선택 <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="relative">
-            <select 
-              className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all appearance-none cursor-pointer"
-              value={data.productType}
-              onChange={(e) => updateData({ productType: e.target.value })}
-            >
-              <option value="">제품을 선택하세요</option>
-              {PRODUCT_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.label}>{opt.label}</option>
+          
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              {PRODUCT_CATEGORIES.map(cat => (
+                <button
+                  key={cat.value}
+                  onClick={() => handleCategoryChange(cat.value)}
+                  className={`flex-1 py-3 px-3 text-sm font-medium rounded-xl border transition-all ${
+                    data.productCategory === cat.value
+                      ? 'bg-[#FF6B35] text-white border-[#FF6B35] shadow-md'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-[#FF6B35]/50'
+                  }`}
+                >
+                  {cat.label}
+                </button>
               ))}
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-              </svg>
             </div>
+
+            {data.productCategory && !isFloor && subcategories.length > 0 && (
+              <div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                {subcategories.map(sub => (
+                  <button
+                    key={sub.value}
+                    onClick={() => handleSubcategoryChange(sub.value)}
+                    className={`flex-1 py-2.5 px-3 text-sm font-medium rounded-xl border transition-all ${
+                      data.productSubcategory === sub.value
+                        ? 'bg-[#1A1D2E] text-white border-[#1A1D2E] shadow-md'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-[#1A1D2E]/30'
+                    }`}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {products.length > 0 && (data.productSubcategory || isFloor) && (
+              <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                {products.map(product => (
+                  <button
+                    key={product}
+                    onClick={() => updateData({ productType: product })}
+                    className={`py-2 px-4 text-sm font-medium rounded-full border transition-all ${
+                      data.productType === product
+                        ? 'bg-[#FF6B35]/10 text-[#FF6B35] border-[#FF6B35] font-bold'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B35]/50'
+                    }`}
+                  >
+                    {product}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {data.productType && (
+              <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1 animate-in fade-in duration-300">
+                <span className="text-[#FF6B35] font-medium">{selectedCategory?.label}</span>
+                {!isFloor && selectedSubcategory && (
+                  <>
+                    <ChevronRight className="w-3 h-3" />
+                    <span className="text-[#1A1D2E] font-medium">{selectedSubcategory.label}</span>
+                  </>
+                )}
+                <ChevronRight className="w-3 h-3" />
+                <span className="font-bold text-gray-700">{data.productType}</span>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Product Color */}
           <div>
             <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
               <Palette className="w-4 h-4 mr-2 text-[#FF6B35]" />
@@ -154,7 +222,6 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
             />
           </div>
 
-          {/* Work Hours */}
           <div>
             <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
               <Clock className="w-4 h-4 mr-2 text-[#FF6B35]" />
@@ -174,7 +241,6 @@ export const Step1Form: React.FC<Step1FormProps> = ({ data, updateData, onNext }
           </div>
         </div>
 
-        {/* Issues */}
         <div>
           <label className="flex items-center text-sm font-semibold text-[#1A1D2E] mb-2">
             <Tag className="w-4 h-4 mr-2 text-[#FF6B35]" />

@@ -17,6 +17,8 @@ export interface KCoatFormData {
   workDate: string;
   workType: WorkType;
   detailedLocation: string;
+  productCategory: string;
+  productSubcategory: string;
   productType: string;
   productColor: string;
   workHours: number;

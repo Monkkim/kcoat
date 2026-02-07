@@ -8,7 +8,7 @@ import { Sidebar } from './components/Sidebar';
 import { Library } from './components/Library';
 import { KCoatFormData, PhotoSet, N8NResponse } from './types';
 import { formatDate } from './utils';
-import { WEBHOOK_URL, PRODUCT_OPTIONS } from './constants';
+import { WEBHOOK_URL } from './constants';
 import { Crown, LogOut, User } from 'lucide-react';
 
 interface AuthUser {
@@ -27,6 +27,8 @@ const App: React.FC = () => {
     workDate: formatDate(new Date()),
     workType: 'remodeling',
     detailedLocation: '',
+    productCategory: '',
+    productSubcategory: '',
     productType: '',
     productColor: '',
     workHours: 4,
@@ -102,7 +104,7 @@ const App: React.FC = () => {
 
     console.log('✅ 처리된 세트 개수:', processedSets.length);
 
-    const productLabel = PRODUCT_OPTIONS.find(p => p.value === formData.productType)?.label || '탄성코트';
+    const productLabel = formData.productType || '탄성코트';
     const initialTitle = `(${formData.buildingName}) ${productLabel} 시공`;
 
     try {
@@ -135,6 +137,8 @@ const App: React.FC = () => {
         workDate: formData.workDate,
         workType: formData.workType,
         detailedLocation: formData.detailedLocation,
+        productCategory: formData.productCategory,
+        productSubcategory: formData.productSubcategory,
         productType: formData.productType,
         productColor: formData.productColor,
         workHours: formData.workHours,
@@ -290,6 +294,8 @@ const App: React.FC = () => {
       workDate: formatDate(new Date()),
       workType: 'remodeling',
       detailedLocation: '',
+      productCategory: '',
+      productSubcategory: '',
       productType: '',
       productColor: '',
       workHours: 4,
@@ -328,6 +334,8 @@ const App: React.FC = () => {
         workDate: formatDate(new Date()),
         workType: 'remodeling',
         detailedLocation: '',
+        productCategory: '',
+        productSubcategory: '',
         productType: '',
         productColor: '',
         workHours: 4,
