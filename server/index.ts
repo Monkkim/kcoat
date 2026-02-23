@@ -2,10 +2,17 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Agent, fetch as undiciFetch } from 'undici';
 import { setupAuth } from './auth.js';
 import { db } from './db/index.js';
 import { users, blogPosts, activityLogs } from './db/schema.js';
 import { eq, desc, sql } from 'drizzle-orm';
+
+const longTimeoutDispatcher = new Agent({
+  headersTimeout: 30 * 60 * 1000,
+  bodyTimeout: 30 * 60 * 1000,
+  connectTimeout: 60 * 1000,
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -86,7 +93,7 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30 * 60 * 1000);
 
-    const response = await fetch(webhookUrl, {
+    const response = await undiciFetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -94,6 +101,7 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
       },
       body: webhookBody,
       signal: controller.signal,
+      dispatcher: longTimeoutDispatcher,
     });
     clearTimeout(timeout);
 
