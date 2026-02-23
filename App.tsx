@@ -9,7 +9,6 @@ import { Library } from './components/Library';
 import { AdminPage } from './components/AdminPage';
 import { KCoatFormData, PhotoSet, N8NResponse } from './types';
 import { formatDate } from './utils';
-import { WEBHOOK_URL } from './constants';
 import { Crown, LogOut, User } from 'lucide-react';
 
 interface AuthUser {
@@ -147,13 +146,12 @@ const App: React.FC = () => {
         photoSets: processedSets
       };
 
-      fetch(WEBHOOK_URL, {
+      fetch('/api/webhook-proxy', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
-        mode: 'cors',
+        credentials: 'include',
         body: JSON.stringify(finalPayload),
       }).then(async (response) => {
         console.log("Webhook response status:", response.status);

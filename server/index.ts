@@ -50,6 +50,33 @@ app.get('/api/blog-posts', requireAuth, async (req, res) => {
   }
 });
 
+app.post('/api/webhook-proxy', requireAuth, async (req, res) => {
+  try {
+    const webhookUrl = 'https://primary-production-c55d.up.railway.app/webhook/send-email';
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(req.body),
+    });
+
+    const text = await response.text();
+
+    if (!response.ok) {
+      console.error('Webhook error:', response.status, text);
+      return res.status(response.status).json({ error: text });
+    }
+
+    res.setHeader('Content-Type', 'application/json');
+    res.send(text);
+  } catch (err) {
+    console.error('Webhook proxy error:', err);
+    res.status(500).json({ error: 'Failed to send webhook' });
+  }
+});
+
 app.post('/api/blog-posts', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
