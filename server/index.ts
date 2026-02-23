@@ -50,30 +50,100 @@ app.get('/api/blog-posts', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/webhook-proxy', requireAuth, async (req, res) => {
+app.post('/api/generate-blog', requireAuth, async (req, res) => {
+  const { postId, webhookPayload } = req.body;
+
+  if (!postId || !webhookPayload) {
+    return res.status(400).json({ error: 'postId and webhookPayload are required' });
+  }
+
+  res.json({ success: true, message: 'Generation started' });
+
+  const webhookUrl = 'https://primary-production-c55d.up.railway.app/webhook/send-email';
+  const initialTitle = webhookPayload.buildingName
+    ? `(${webhookPayload.buildingName}) ${webhookPayload.productType || '탄성코트'} 시공`
+    : '블로그 포스트';
+
   try {
-    const webhookUrl = 'https://primary-production-c55d.up.railway.app/webhook/send-email';
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(webhookPayload),
     });
 
-    const text = await response.text();
-
     if (!response.ok) {
-      console.error('Webhook error:', response.status, text);
-      return res.status(response.status).json({ error: text });
+      const errorText = await response.text();
+      console.error('Webhook error:', response.status, errorText);
+      await db.update(blogPosts)
+        .set({ content: '생성 중 오류가 발생했습니다: ' + errorText.substring(0, 200), status: 'error' })
+        .where(eq(blogPosts.id, postId));
+      return;
     }
 
-    res.setHeader('Content-Type', 'application/json');
-    res.send(text);
+    const text = await response.text();
+    console.log('Webhook response received for post:', postId);
+
+    if (!text || text.trim() === '') {
+      await db.update(blogPosts)
+        .set({ content: 'AI 서버에서 빈 응답을 받았습니다.', status: 'error' })
+        .where(eq(blogPosts.id, postId));
+      return;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('JSON parse error:', e);
+      await db.update(blogPosts)
+        .set({ content: '서버 응답이 올바른 JSON 형식이 아닙니다.', status: 'error' })
+        .where(eq(blogPosts.id, postId));
+      return;
+    }
+
+    const responseData = Array.isArray(data) ? data[0] : data;
+
+    let finalTitle = responseData.title || initialTitle;
+    let finalContent = '';
+    let finalHashtags = '#탄성코트 #KCOAT #베란다칠 #결로방지';
+
+    if (responseData.html) {
+      finalContent = responseData.html;
+    } else {
+      const sectionKeys = ['인트로', '제품', '오프닝', 'USP', 'FAQ', 'TECH', '철학', '과정', '정리', '헤더'];
+      const contentParts: string[] = [];
+      for (const key of sectionKeys) {
+        if (responseData[key]) {
+          contentParts.push(responseData[key]);
+        }
+      }
+      finalContent = contentParts.join('\n\n');
+    }
+
+    if (responseData['해시태그']) {
+      finalHashtags = responseData['해시태그'];
+    } else if (responseData.hashtags) {
+      finalHashtags = responseData.hashtags;
+    }
+
+    await db.update(blogPosts)
+      .set({
+        title: finalTitle,
+        content: finalContent,
+        hashtags: finalHashtags,
+        status: 'completed'
+      })
+      .where(eq(blogPosts.id, postId));
+
+    console.log('✅ Blog post generation completed:', postId);
   } catch (err) {
-    console.error('Webhook proxy error:', err);
-    res.status(500).json({ error: 'Failed to send webhook' });
+    console.error('Webhook processing error:', err);
+    await db.update(blogPosts)
+      .set({ content: '생성 중 오류가 발생했습니다.', status: 'error' })
+      .where(eq(blogPosts.id, postId));
   }
 });
 

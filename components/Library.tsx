@@ -218,6 +218,10 @@ export const Library: React.FC = () => {
                           <Loader2 className="w-3 h-3 animate-spin" />
                           생성중
                         </span>
+                      ) : post.status === 'error' ? (
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full whitespace-nowrap">
+                          오류
+                        </span>
                       ) : (
                         <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full whitespace-nowrap">
                           <Check className="w-3 h-3" />

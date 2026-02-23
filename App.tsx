@@ -7,7 +7,7 @@ import { AuthPage } from './components/AuthPage';
 import { Sidebar } from './components/Sidebar';
 import { Library } from './components/Library';
 import { AdminPage } from './components/AdminPage';
-import { KCoatFormData, PhotoSet, N8NResponse } from './types';
+import { KCoatFormData, PhotoSet } from './types';
 import { formatDate } from './utils';
 import { Crown, LogOut, User } from 'lucide-react';
 
@@ -42,7 +42,6 @@ const App: React.FC = () => {
     { id: 'initial', before: null, after: null, type: 'two' }
   ]);
 
-  const [apiResult, setApiResult] = useState<N8NResponse | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -133,7 +132,7 @@ const App: React.FC = () => {
 
       setStep(3);
 
-      const finalPayload = {
+      const webhookPayload = {
         buildingName: formData.buildingName,
         workDate: formData.workDate,
         workType: formData.workType,
@@ -146,128 +145,16 @@ const App: React.FC = () => {
         photoSets: processedSets
       };
 
-      fetch('/api/webhook-proxy', {
+      fetch('/api/generate-blog', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(finalPayload),
-      }).then(async (response) => {
-        console.log("Webhook response status:", response.status);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Error response body:", errorText);
-          await fetch(`/api/blog-posts/${newPost.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              content: '생성 중 오류가 발생했습니다.',
-              status: 'completed'
-            })
-          });
-          return;
-        }
-
-        const text = await response.text();
-        console.log("Raw response text:", text);
-        
-        if (!text || text.trim() === "") {
-          console.error("Empty response from n8n");
-          await fetch(`/api/blog-posts/${newPost.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              content: 'n8n 서버에서 빈 데이터를 보냈습니다.',
-              status: 'completed'
-            })
-          });
-          return;
-        }
-
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          console.error("JSON parse error:", e);
-          await fetch(`/api/blog-posts/${newPost.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              content: '서버 응답이 올바른 JSON 형식이 아닙니다.',
-              status: 'completed'
-            })
-          });
-          return;
-        }
-        
-        console.log("Parsed data:", data);
-
-        const responseData = Array.isArray(data) ? data[0] : data;
-
-        let finalTitle = responseData.title || initialTitle;
-        let finalContent = '';
-        let finalHashtags = "#탄성코트 #KCOAT #베란다칠 #결로방지";
-
-        if (responseData.html) {
-          finalContent = responseData.html;
-        } else {
-          const sectionKeyMap: { [key: string]: string } = {
-            '인트로': 'intro',
-            '제품': 'product',
-            '오프닝': 'opening',
-            'USP': 'usp',
-            'FAQ': 'faq',
-            'TECH': 'tech',
-            '철학': 'philosophy',
-            '과정': 'process',
-            '정리': 'recap',
-            '헤더': 'header'
-          };
-
-          const contentParts: string[] = [];
-          for (const [koreanKey] of Object.entries(sectionKeyMap)) {
-            if (responseData[koreanKey]) {
-              contentParts.push(responseData[koreanKey]);
-            }
-          }
-          finalContent = contentParts.join('\n\n');
-        }
-
-        if (responseData['해시태그']) {
-          finalHashtags = responseData['해시태그'];
-        } else if (responseData.hashtags) {
-          finalHashtags = responseData.hashtags;
-        }
-
-        await fetch(`/api/blog-posts/${newPost.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            title: finalTitle,
-            content: finalContent,
-            hashtags: finalHashtags,
-            status: 'completed'
-          })
-        });
-
-        console.log('✅ 블로그 포스트 생성 완료:', newPost.id);
-      }).catch(async (err) => {
-        console.error('웹훅 에러:', err);
-        await fetch(`/api/blog-posts/${newPost.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            content: '생성 중 오류가 발생했습니다: ' + err.message,
-            status: 'completed'
-          })
-        });
+        body: JSON.stringify({ postId: newPost.id, webhookPayload }),
+      }).then((res) => {
+        if (!res.ok) console.error('Failed to start generation');
+        else console.log('✅ AI 생성 요청 전송 완료 (서버에서 백그라운드 처리중)');
+      }).catch((err) => {
+        console.error('Generation request error:', err);
       });
 
     } catch (err) {
@@ -287,7 +174,7 @@ const App: React.FC = () => {
 
   const resetForm = () => {
     setStep(1);
-    setApiResult(null);
+
     setFormData({
       buildingName: '',
       workDate: formatDate(new Date()),
@@ -326,7 +213,7 @@ const App: React.FC = () => {
 
       setActiveMenu('library');
       setStep(1);
-      setApiResult(null);
+  
       setFormData({
         buildingName: '',
         workDate: formatDate(new Date()),
