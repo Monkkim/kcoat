@@ -59,6 +59,9 @@ export const Library: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setPosts(data);
+      } else if (res.status === 401) {
+        console.error('Session expired, reloading...');
+        window.location.reload();
       }
     } catch (err) {
       console.error('Failed to fetch posts:', err);
