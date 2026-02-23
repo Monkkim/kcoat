@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
 import { PRODUCT_CATEGORIES, ISSUE_TAGS } from '../constants';
-import { WorkType } from '../types';
+import { WorkType, KCoatFormData } from '../types';
 import { Calendar, Building, MapPin, Package, Palette, Tag, Plus, X, ChevronRight, Pencil } from 'lucide-react';
 
 interface Step1FormProps {
-  data: any;
-  updateData: (updates: any) => void;
+  data: KCoatFormData;
+  updateData: (updates: Partial<KCoatFormData>) => void;
   onNext: () => void;
 }
 

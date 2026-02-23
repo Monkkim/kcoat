@@ -351,7 +351,7 @@ export const Step2Upload: React.FC<Step2UploadProps> = ({ photoSets, setPhotoSet
           onClick={() => {
             if (isSubmitting) return;
             setIsSubmitting(true);
-            onNext();
+            Promise.resolve(onNext()).finally(() => setIsSubmitting(false));
           }}
           className={`flex-[2] py-4 rounded-2xl font-bold text-white shadow-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] ${
             isAnyUploaded && !isProcessing && !isSubmitting ? 'bg-[#FF6B35] hover:bg-[#e85a2a]' : 'bg-gray-300 cursor-not-allowed'

@@ -35,10 +35,12 @@
     "bcryptjs": "^3.0.3",
     "connect-pg-simple": "^10.0.0",
     "cors": "^2.8.5",
+    "dompurify": "^3.3.1",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
     "drizzle-zod": "^0.8.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "express-session": "^1.18.2",
     "lucide-react": "^0.562.0",
     "nodemailer": "^7.0.12",
@@ -51,6 +53,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",

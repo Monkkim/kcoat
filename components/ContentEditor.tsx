@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { sanitizeHtml } from '../utils';
 
 interface ContentEditorProps {
   initialContent: string;
@@ -14,7 +15,7 @@ export const ContentEditor = forwardRef<ContentEditorHandle, ContentEditorProps>
 
     useEffect(() => {
       if (editorRef.current) {
-        editorRef.current.innerHTML = initialContent;
+        editorRef.current.innerHTML = sanitizeHtml(initialContent);
       }
     }, []);
 

@@ -75,8 +75,6 @@ export const PRODUCT_OPTIONS = [
   { value: "general_elastic", label: "일반탄성", description: "" }
 ];
 
-export const COLOR_OPTIONS: string[] = [];
-
 export const ISSUE_TAGS = [
   "#곰팡이발생",
   "#균열발생/벽지",
@@ -87,6 +85,3 @@ export const ISSUE_TAGS = [
   "#도장면박리",
   "#벽면손상"
 ];
-
-// n8n 웹훅 주소
-export const WEBHOOK_URL = 'https://primary-production-c55d.up.railway.app/webhook/send-email';

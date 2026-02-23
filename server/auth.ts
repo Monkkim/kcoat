@@ -6,6 +6,7 @@ import connectPg from 'connect-pg-simple';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import rateLimit from 'express-rate-limit';
 import { users, activityLogs, insertUserSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, type SelectUser } from './db/schema.js';
 import { db, pool } from './db/index.js';
 import { eq, count } from 'drizzle-orm';
@@ -47,8 +48,12 @@ export function setupAuth(app: Express) {
     tableName: 'session'
   });
   
+  if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+    throw new Error('SESSION_SECRET 환경변수가 설정되지 않았습니다. 프로덕션에서는 반드시 설정해야 합니다.');
+  }
+
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'kcoat-studio-secret-key-2024',
+    secret: process.env.SESSION_SECRET || 'kcoat-dev-only-secret',
     resave: false,
     saveUninitialized: false,
     store,
@@ -96,7 +101,15 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/register', async (req, res) => {
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { error: '너무 많은 요청이 발생했습니다. 15분 후 다시 시도해주세요.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  app.post('/api/register', authLimiter, async (req, res) => {
     try {
       const result = insertUserSchema.safeParse(req.body);
       if (!result.success) {
@@ -110,7 +123,7 @@ export function setupAuth(app: Express) {
 
       const [userCount] = await db.select({ value: count() }).from(users);
       const isFirstUser = userCount.value === 0;
-      const isDefaultAdmin = result.data.email === 'snu08041@naver.com';
+      const isDefaultAdmin = process.env.DEFAULT_ADMIN_EMAIL ? result.data.email === process.env.DEFAULT_ADMIN_EMAIL : false;
 
       const hashedPassword = await hashPassword(result.data.password);
       const [user] = await db.insert(users).values({
@@ -152,7 +165,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/login', (req, res, next) => {
+  app.post('/api/login', authLimiter, (req, res, next) => {
     const result = loginSchema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({ error: result.error.issues[0]?.message || '입력값이 올바르지 않습니다' });
@@ -165,7 +178,7 @@ export function setupAuth(app: Express) {
       if (!user) {
         return res.status(401).json({ error: info?.message || '이메일 또는 비밀번호가 올바르지 않습니다' });
       }
-      const isDefaultAdmin = user.email === 'snu08041@naver.com';
+      const isDefaultAdmin = process.env.DEFAULT_ADMIN_EMAIL ? user.email === process.env.DEFAULT_ADMIN_EMAIL : false;
       if (isDefaultAdmin && (!user.approved || user.role !== 'admin')) {
         try {
           const [updated] = await db.update(users).set({ role: 'admin', approved: true }).where(eq(users.id, user.id)).returning();
@@ -221,7 +234,7 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post('/api/forgot-password', async (req, res) => {
+  app.post('/api/forgot-password', authLimiter, async (req, res) => {
     try {
       const result = forgotPasswordSchema.safeParse(req.body);
       if (!result.success) {

@@ -45,7 +45,7 @@ export interface N8NResponse {
   html?: string; // deprecated, use sections instead
   sections?: N8NSection[];
   title?: string;
-  images?: string[]; // Array of image URLs or HTML
+  images?: { base64?: string; url?: string }[];
   hashtags?: string;
 }
 

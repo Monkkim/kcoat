@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { N8NResponse, ContentBlock } from '../types';
 // Fixed: Changed copyToClipboard to copyRichTextToClipboard to match exports in utils.ts
-import { copyRichTextToClipboard } from '../utils';
+import { copyRichTextToClipboard, sanitizeHtml } from '../utils';
 import { Check, Copy, RefreshCw, Save, Hash, GripVertical, Trash2, Plus, Type } from 'lucide-react';
 
 interface Step4ResultProps {
@@ -21,7 +21,7 @@ export const Step4Result: React.FC<Step4ResultProps> = ({ result, onRegenerate }
       setTitle(result.title);
       // HTML을 간단한 텍스트 블록들로 분리 (p, h3 태그 기준)
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = result.html;
+      tempDiv.innerHTML = sanitizeHtml(result.html);
       const initialBlocks: ContentBlock[] = [];
       
       Array.from(tempDiv.children).forEach((child, idx) => {
@@ -134,7 +134,7 @@ export const Step4Result: React.FC<Step4ResultProps> = ({ result, onRegenerate }
                         suppressContentEditableWarning
                         onBlur={(e) => updateBlockContent(block.id, e.currentTarget.innerHTML)}
                         className="outline-none prose prose-orange max-w-none min-h-[1em] py-2 leading-relaxed text-[#2D3436]"
-                        dangerouslySetInnerHTML={{ __html: block.content }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.content) }}
                       />
                     ) : (
                       <div className="my-4 relative rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
@@ -168,7 +168,7 @@ export const Step4Result: React.FC<Step4ResultProps> = ({ result, onRegenerate }
             <p className="text-[10px] text-gray-400 uppercase tracking-widest">Drag to insert into post</p>
             
             <div className="grid grid-cols-2 gap-3 mt-4">
-              {result.images.map((img, idx) => (
+              {(result.images ?? []).map((img, idx) => (
                 <div 
                   key={idx}
                   draggable

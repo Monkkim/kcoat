@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.NODE_ENV === 'production' ? 5000 : 3001;
 
 app.use(cors({
-  origin: true,
+  origin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? false : true),
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -29,21 +29,20 @@ function requireAuth(req: express.Request, res: express.Response, next: express.
   next();
 }
 
+function parseIntParam(value: string): number | null {
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) || String(n) !== value ? null : n;
+}
+
 function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
-  if ((req.user as any).role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+  if (req.user!.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
   next();
 }
 
 app.get('/api/blog-posts', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-
-    await db.update(blogPosts)
-      .set({ status: 'error', content: '생성 시간이 초과되었습니다. 다시 시도해주세요.' })
-      .where(
-        sql`${blogPosts.status} = 'generating' AND ${blogPosts.userId} = ${userId} AND ${blogPosts.createdAt} < NOW() - INTERVAL '10 minutes'`
-      );
 
     const posts = await db
       .select()
@@ -60,8 +59,17 @@ app.get('/api/blog-posts', requireAuth, async (req, res) => {
 app.post('/api/generate-blog', requireAuth, async (req, res) => {
   const { postId, webhookPayload } = req.body;
 
+  // 페이로드 크기 로깅
+  const payloadSize = JSON.stringify(req.body).length;
+  console.log(`📦 generate-blog 요청 수신 - postId: ${postId}, 페이로드 크기: ${(payloadSize / 1024 / 1024).toFixed(2)}MB, 사진세트: ${webhookPayload?.photoSets?.length || 0}개`);
+
   if (!postId || !webhookPayload) {
     return res.status(400).json({ error: 'postId and webhookPayload are required' });
+  }
+
+  const [post] = await db.select().from(blogPosts).where(eq(blogPosts.id, postId)).limit(1);
+  if (!post || post.userId !== req.user!.id) {
+    return res.status(403).json({ error: '해당 포스트에 대한 권한이 없습니다' });
   }
 
   res.json({ success: true, message: 'Generation started' });
@@ -72,6 +80,9 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
     : '블로그 포스트';
 
   try {
+    const webhookBody = JSON.stringify(webhookPayload);
+    console.log(`📤 Webhook 전송 시작 - postId: ${postId}, webhook 페이로드 크기: ${(webhookBody.length / 1024 / 1024).toFixed(2)}MB`);
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5 * 60 * 1000);
 
@@ -81,7 +92,7 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(webhookPayload),
+      body: webhookBody,
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -151,10 +162,13 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
       .where(eq(blogPosts.id, postId));
 
     console.log('✅ Blog post generation completed:', postId);
-  } catch (err) {
-    console.error('Webhook processing error:', err);
+  } catch (err: any) {
+    const errorMsg = err?.name === 'AbortError'
+      ? '웹훅 응답 타임아웃 (5분 초과)'
+      : `웹훅 처리 오류: ${err?.message || String(err)}`;
+    console.error(`❌ Webhook processing error for post ${postId}:`, err);
     await db.update(blogPosts)
-      .set({ content: '생성 중 오류가 발생했습니다.', status: 'error' })
+      .set({ content: `생성 중 오류가 발생했습니다: ${errorMsg}`, status: 'error' })
       .where(eq(blogPosts.id, postId));
   }
 });
@@ -196,7 +210,8 @@ app.post('/api/blog-posts', requireAuth, async (req, res) => {
 app.put('/api/blog-posts/:id', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    const postId = parseInt(req.params.id as string);
+    const postId = parseIntParam(req.params.id as string);
+    if (postId === null) return res.status(400).json({ error: 'Invalid ID' });
     const { title, content, hashtags, status } = req.body;
     
     const [post] = await db
@@ -209,7 +224,7 @@ app.put('/api/blog-posts/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
     
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: Partial<typeof blogPosts.$inferInsert> & { updatedAt: Date } = { updatedAt: new Date() };
     if (title !== undefined) updateData.title = title;
     if (content !== undefined) updateData.content = content;
     if (hashtags !== undefined) updateData.hashtags = hashtags;
@@ -231,7 +246,8 @@ app.put('/api/blog-posts/:id', requireAuth, async (req, res) => {
 app.patch('/api/blog-posts/:id', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    const postId = parseInt(req.params.id as string);
+    const postId = parseIntParam(req.params.id as string);
+    if (postId === null) return res.status(400).json({ error: 'Invalid ID' });
     const { content } = req.body;
     
     const [post] = await db
@@ -258,7 +274,8 @@ app.patch('/api/blog-posts/:id', requireAuth, async (req, res) => {
 app.delete('/api/blog-posts/:id', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    const postId = parseInt(req.params.id as string);
+    const postId = parseIntParam(req.params.id as string);
+    if (postId === null) return res.status(400).json({ error: 'Invalid ID' });
     
     const [post] = await db
       .select()
@@ -300,7 +317,8 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id as string);
+    const userId = parseIntParam(req.params.id as string);
+    if (userId === null) return res.status(400).json({ error: 'Invalid ID' });
     await db.update(users).set({ approved: true }).where(eq(users.id, userId));
     await db.insert(activityLogs).values({
       userId: req.user!.id,
@@ -316,7 +334,8 @@ app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/users/:id/reject', requireAdmin, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id as string);
+    const userId = parseIntParam(req.params.id as string);
+    if (userId === null) return res.status(400).json({ error: 'Invalid ID' });
     await db.insert(activityLogs).values({
       userId: req.user!.id,
       action: 'user_reject',
@@ -332,7 +351,8 @@ app.post('/api/admin/users/:id/reject', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/users/:id/set-admin', requireAdmin, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id as string);
+    const userId = parseIntParam(req.params.id as string);
+    if (userId === null) return res.status(400).json({ error: 'Invalid ID' });
     await db.update(users).set({ role: 'admin' }).where(eq(users.id, userId));
     await db.insert(activityLogs).values({
       userId: req.user!.id,
@@ -348,7 +368,8 @@ app.post('/api/admin/users/:id/set-admin', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/users/:id/remove-admin', requireAdmin, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id as string);
+    const userId = parseIntParam(req.params.id as string);
+    if (userId === null) return res.status(400).json({ error: 'Invalid ID' });
     if (userId === req.user!.id) {
       return res.status(400).json({ error: '자신의 관리자 권한은 해제할 수 없습니다' });
     }

@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { 
-  Bold, 
-  Italic, 
-  Underline as UnderlineIcon, 
-  AlignLeft, 
-  AlignCenter, 
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  AlignLeft,
+  AlignCenter,
   AlignRight,
   Heading1,
   Heading2,
@@ -14,6 +14,7 @@ import {
   Type,
   ChevronDown
 } from 'lucide-react';
+import { sanitizeHtml } from '../utils';
 
 interface RichTextEditorProps {
   content: string;
@@ -89,7 +90,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChang
 
   useEffect(() => {
     if (editorRef.current && content && !isInitialized) {
-      editorRef.current.innerHTML = content;
+      editorRef.current.innerHTML = sanitizeHtml(content);
       setIsInitialized(true);
       setTimeout(setupImageResizeHandles, 100);
     }

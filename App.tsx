@@ -146,16 +146,26 @@ const App: React.FC = () => {
         photoSets: processedSets
       };
 
+      const generateBody = JSON.stringify({ postId: newPost.id, webhookPayload });
+      console.log(`📤 generate-blog 요청 전송 - 페이로드 크기: ${(generateBody.length / 1024 / 1024).toFixed(2)}MB`);
+
       fetch('/api/generate-blog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ postId: newPost.id, webhookPayload }),
-      }).then((res) => {
-        if (!res.ok) console.error('Failed to start generation');
-        else console.log('✅ AI 생성 요청 전송 완료 (서버에서 백그라운드 처리중)');
+        body: generateBody,
+      }).then(async (res) => {
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          console.error(`❌ generate-blog 실패 - status: ${res.status}, body: ${errText}`);
+          if (res.status === 413) {
+            console.error('⚠️ 페이로드가 서버 제한(50MB)을 초과했습니다. 이미지 압축을 확인하세요.');
+          }
+        } else {
+          console.log('✅ AI 생성 요청 전송 완료 (서버에서 백그라운드 처리중)');
+        }
       }).catch((err) => {
-        console.error('Generation request error:', err);
+        console.error('❌ generate-blog 네트워크 에러:', err);
       });
 
     } catch (err: any) {
@@ -214,22 +224,7 @@ const App: React.FC = () => {
       }
 
       setActiveMenu('library');
-      setStep(1);
-  
-      setFormData({
-        buildingName: '',
-        workDate: formatDate(new Date()),
-        workType: 'remodeling',
-        detailedLocation: '',
-        productCategory: '',
-        productSubcategory: '',
-        productType: '',
-        productColor: '',
-        issues: [],
-        useWatermark: true,
-        photoSets: []
-      });
-      setPhotoSets([{ id: 'initial', before: null, after: null, type: 'two' }]);
+      resetForm();
     } catch (err) {
       console.error('Error saving blog post:', err);
       alert('저장 중 오류가 발생했습니다.');

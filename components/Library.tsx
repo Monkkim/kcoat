@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FileText, Calendar, Trash2, Eye, Copy, Search, RefreshCw, Loader2, Check, Pencil, Save, X } from 'lucide-react';
 import { ContentEditor, ContentEditorHandle } from './ContentEditor';
+import { sanitizeHtml } from '../utils';
 
 interface BlogPost {
   id: number;
@@ -26,12 +27,17 @@ export const Library: React.FC = () => {
   const [editKey, setEditKey] = useState(0);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const contentEditorRef = useRef<ContentEditorHandle>(null);
+  const isEditingRef = useRef(isEditing);
+
+  useEffect(() => {
+    isEditingRef.current = isEditing;
+  }, [isEditing]);
 
   useEffect(() => {
     fetchPosts();
-    
+
     pollingRef.current = setInterval(() => {
-      if (!isEditing) {
+      if (!isEditingRef.current) {
         fetchPosts(false);
       }
     }, 5000);
@@ -41,7 +47,7 @@ export const Library: React.FC = () => {
         clearInterval(pollingRef.current);
       }
     };
-  }, [isEditing]);
+  }, []);
 
   useEffect(() => {
     if (selectedPost && !isEditing) {
@@ -378,7 +384,7 @@ export const Library: React.FC = () => {
               ) : (
                 <div
                   className="library-content"
-                  dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedPost.content) }}
                 />
               )}
             </div>
