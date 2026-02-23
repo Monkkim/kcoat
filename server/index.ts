@@ -38,6 +38,13 @@ function requireAdmin(req: express.Request, res: express.Response, next: express
 app.get('/api/blog-posts', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
+
+    await db.update(blogPosts)
+      .set({ status: 'error', content: '생성 시간이 초과되었습니다. 다시 시도해주세요.' })
+      .where(
+        sql`${blogPosts.status} = 'generating' AND ${blogPosts.userId} = ${userId} AND ${blogPosts.createdAt} < NOW() - INTERVAL '10 minutes'`
+      );
+
     const posts = await db
       .select()
       .from(blogPosts)
@@ -65,6 +72,9 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
     : '블로그 포스트';
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -72,7 +82,9 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
         'Accept': 'application/json'
       },
       body: JSON.stringify(webhookPayload),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -150,7 +162,9 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
 app.post('/api/blog-posts', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    const { title, content, buildingName, workDate, productType, photoSets, status } = req.body;
+    const { title, content, buildingName, workDate, productType, status } = req.body;
+    
+    console.log(`Creating blog post for user ${userId}: "${title}"`);
     
     const [newPost] = await db
       .insert(blogPosts)
@@ -161,7 +175,6 @@ app.post('/api/blog-posts', requireAuth, async (req, res) => {
         buildingName,
         workDate,
         productType,
-        photoSets,
         status: status || 'completed'
       })
       .returning();
@@ -172,6 +185,7 @@ app.post('/api/blog-posts', requireAuth, async (req, res) => {
       details: `블로그 생성: ${title}`,
     });
     
+    console.log(`✅ Blog post created: ${newPost.id}`);
     res.status(201).json(newPost);
   } catch (err) {
     console.error('Error creating blog post:', err);
@@ -384,6 +398,22 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(PORT, '0.0.0.0', () => {
+async function cleanupStuckPosts() {
+  try {
+    const result = await db.update(blogPosts)
+      .set({ status: 'error', content: '생성 시간이 초과되었습니다. 다시 시도해주세요.' })
+      .where(sql`${blogPosts.status} = 'generating' AND ${blogPosts.createdAt} < NOW() - INTERVAL '10 minutes'`)
+      .returning({ id: blogPosts.id });
+    if (result.length > 0) {
+      console.log(`🧹 Cleaned up ${result.length} stuck generating posts: ${result.map(r => r.id).join(', ')}`);
+    }
+  } catch (err) {
+    console.error('Failed to clean up stuck posts:', err);
+  }
+}
+
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`Server running on port ${PORT}`);
+  await cleanupStuckPosts();
+  setInterval(cleanupStuckPosts, 5 * 60 * 1000);
 });

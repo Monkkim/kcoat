@@ -118,13 +118,14 @@ const App: React.FC = () => {
           buildingName: formData.buildingName,
           workDate: formData.workDate,
           productType: formData.productType,
-          photoSets: processedSets,
           status: 'generating'
         })
       });
 
       if (!createRes.ok) {
-        throw new Error('Failed to create blog post');
+        const errData = await createRes.json().catch(() => ({}));
+        console.error('Blog post creation failed:', createRes.status, errData);
+        throw new Error(errData.error || 'Failed to create blog post');
       }
 
       const newPost = await createRes.json();
@@ -157,9 +158,11 @@ const App: React.FC = () => {
         console.error('Generation request error:', err);
       });
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('포스트 생성 에러:', err);
-      alert("블로그 포스트 생성에 실패했습니다.");
+      alert(err.message === 'Failed to fetch' 
+        ? "네트워크 연결을 확인해주세요. 인터넷 연결이 불안정합니다." 
+        : `블로그 포스트 생성에 실패했습니다: ${err.message || '알 수 없는 오류'}`);
     }
   };
 
@@ -203,7 +206,6 @@ const App: React.FC = () => {
           buildingName: formData.buildingName,
           workDate: formData.workDate,
           productType: formData.productType,
-          photoSets: photoSets.filter(s => s.before || s.after)
         })
       });
 
