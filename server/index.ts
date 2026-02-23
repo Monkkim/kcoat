@@ -84,7 +84,7 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
     console.log(`📤 Webhook 전송 시작 - postId: ${postId}, webhook 페이로드 크기: ${(webhookBody.length / 1024 / 1024).toFixed(2)}MB`);
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+    const timeout = setTimeout(() => controller.abort(), 30 * 60 * 1000);
 
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -164,7 +164,7 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
     console.log('✅ Blog post generation completed:', postId);
   } catch (err: any) {
     const errorMsg = err?.name === 'AbortError'
-      ? '웹훅 응답 타임아웃 (5분 초과)'
+      ? '웹훅 응답 타임아웃 (30분 초과)'
       : `웹훅 처리 오류: ${err?.message || String(err)}`;
     console.error(`❌ Webhook processing error for post ${postId}:`, err);
     await db.update(blogPosts)
@@ -423,7 +423,7 @@ async function cleanupStuckPosts() {
   try {
     const result = await db.update(blogPosts)
       .set({ status: 'error', content: '생성 시간이 초과되었습니다. 다시 시도해주세요.' })
-      .where(sql`${blogPosts.status} = 'generating' AND ${blogPosts.createdAt} < NOW() - INTERVAL '10 minutes'`)
+      .where(sql`${blogPosts.status} = 'generating' AND ${blogPosts.createdAt} < NOW() - INTERVAL '35 minutes'`)
       .returning({ id: blogPosts.id });
     if (result.length > 0) {
       console.log(`🧹 Cleaned up ${result.length} stuck generating posts: ${result.map(r => r.id).join(', ')}`);
