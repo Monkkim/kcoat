@@ -81,7 +81,7 @@ app.post('/api/generate-blog', requireAuth, async (req, res) => {
 
   res.json({ success: true, message: 'Generation started' });
 
-  const webhookUrl = 'https://primary-production-c55d.up.railway.app/webhook-test/5379ac59-92d2-42ba-9a1f-4b066a610b80';
+  const webhookUrl = 'https://primary-production-c55d.up.railway.app/webhook/5379ac59-92d2-42ba-9a1f-4b066a610b80';
   const initialTitle = webhookPayload.buildingName
     ? `(${webhookPayload.buildingName}) ${webhookPayload.productType || '탄성코트'} 시공`
     : '블로그 포스트';
