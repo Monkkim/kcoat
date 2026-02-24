@@ -42,7 +42,7 @@ export const fileToBase64 = (file: File): Promise<string> => {
             return resolve(result);
           }
           ctx.drawImage(img, 0, 0, width, height);
-          const compressed = canvas.toDataURL('image/jpeg', 0.8);
+          const compressed = canvas.toDataURL('image/jpeg', 0.6);
           console.log(`✅ 이미지 압축 완료: ${file.name} (${result.length} → ${compressed.length}, ${Math.round(compressed.length / result.length * 100)}%)`);
           resolve(compressed);
         } catch (e) {
